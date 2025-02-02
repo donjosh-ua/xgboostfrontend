@@ -1,33 +1,114 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { FaSun, FaMoon } from 'react-icons/fa'
+import FileSelection from './components/fileSelection/FileSelection'
+import Tunning from './components/tunning/Tunning'
+import Training from './components/training/Training'
+import Results from './components/Results'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeStep, setActiveStep] = useState(0)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [filePreview, setFilePreview] = useState([])
+  const [hasHeader, setHasHeader] = useState(false)
+  const [theme, setTheme] = useState('light')
+  const [mode, setMode] = useState('manual')
+  const [params, setParams] = useState({
+    learningRate: '',
+    nEstimators: '',
+    maxDepth: '',
+    // Add more parameters as needed
+  })
+  const [gridParams, setGridParams] = useState({
+    seed: '',
+    eta: '',
+    max_depth: '',
+    gamma: '',
+    learning_rate: '',
+    min_child_weight: '',
+    subsample: '',
+    colsample_bytree: '',
+  })
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light'
+    setTheme(newTheme)
+    document.documentElement.setAttribute('data-theme', newTheme)
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+      <header>
+        <img src="/xgb_logo.png" alt="XGBoost Logo" />
+        <nav>
+          <ul>
+            <button
+              type="button"
+              className={activeStep === 0 ? 'active-step' : ''}
+              onClick={() => setActiveStep(0)}
+            >
+              File Selection
+            </button>
+            <button
+              type="button"
+              className={activeStep === 1 ? 'active-step' : ''}
+              onClick={() => setActiveStep(1)}
+            >
+              Tunning
+            </button>
+            <button
+              type="button"
+              className={activeStep === 2 ? 'active-step' : ''}
+              onClick={() => setActiveStep(2)}
+            >
+              Training
+            </button>
+            <button
+              type="button"
+              className={activeStep === 3 ? 'active-step' : ''}
+              onClick={() => setActiveStep(3)}
+            >
+              Results
+            </button>
+          </ul>
+        </nav>
+        <button className="theme-toggle-button" onClick={toggleTheme}>
+          {theme === 'light' ? <FaMoon /> : <FaSun />}
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      </header>
+
+      <main>
+        {activeStep === 0 && (
+          <FileSelection
+            selectedFile={selectedFile}
+            setSelectedFile={setSelectedFile}
+            filePreview={filePreview}
+            setFilePreview={setFilePreview}
+            hasHeader={hasHeader}
+            setHasHeader={setHasHeader}
+          />
+        )}
+        {activeStep === 1 && (
+          <Tunning
+            selectedFile={selectedFile}
+            params={params}
+            setParams={setParams}
+            gridParams={gridParams}
+            setGridParams={setGridParams}
+            mode={mode}
+            setMode={setMode}
+          />
+        )}
+        {activeStep === 2 && (
+          <Training
+            selectedFile={selectedFile}
+            params={params}
+            gridParams={gridParams}
+            mode={mode}
+          />
+        )}
+        {activeStep === 3 && <Results selectedFile={selectedFile} />}
+      </main>
     </>
   )
 }

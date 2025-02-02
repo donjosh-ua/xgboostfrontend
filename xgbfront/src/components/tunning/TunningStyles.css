@@ -1,0 +1,96 @@
+/* * {
+  border: 1px solid black;
+} */
+
+.tunning-container .radio-group {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.tunning-container .mode-button {
+  border: 1px solid #ccc;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0 10px;
+  width: 140px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.tunning-container .mode-button:hover {
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.tunning-container .mode-button.selected:hover {
+  border: 1px solid #ccc;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.tunning-container .mode-button.selected {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.tunning-container .tunning-sections {
+  display: flex;
+  justify-content: space-between;
+  
+}
+
+.tunning-container .card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0px 20px 20px 20px;
+  margin: 10px;
+  background-color: var(--card-bg-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 48%;
+}
+
+.tunning-container table {
+  width: 90%;
+  border-collapse: collapse;
+  margin: 0 auto;
+  margin-bottom: 20px
+}
+
+.tunning-container td {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+}
+
+.tunning-container input[type="number"] {
+  width: 80%;
+  padding: 6px;
+  border: 1px solid var(--button-bg-color);
+  border-radius: 4px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+@media (max-width: 870px) {
+  .tunning-container {
+    margin-top: 70px
+  }
+
+}
+
+@media (max-width: 600px) {
+  .tunning-container {
+    margin-top: 50px
+  }
+}
+
+@media (max-width: 800px) {
+  .tunning-container .tunning-sections {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tunning-container .card {
+    width: 400px;
+  }
+}
