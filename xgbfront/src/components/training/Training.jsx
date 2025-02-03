@@ -1,33 +1,33 @@
-import React, { useState } from 'react'
-import './TrainingStyles.css'
+import React, { useState } from "react";
+import "./TrainingStyles.css";
 
 function Training({ selectedFile, params, gridParams, mode }) {
-  const [trainingMethod, setTrainingMethod] = useState('split')
-  const [splitRatio, setSplitRatio] = useState(80)
-  const [numFolds, setNumFolds] = useState(5)
+  const [trainingMethod, setTrainingMethod] = useState("split");
+  const [splitRatio, setSplitRatio] = useState(80);
+  const [numFolds, setNumFolds] = useState(5);
 
   const handleTrainingMethodChange = (method) => {
-    setTrainingMethod(method)
-  }
+    setTrainingMethod(method);
+  };
 
   const handleSplitRatioChange = (e) => {
-    setSplitRatio(e.target.value)
-  }
+    setSplitRatio(e.target.value);
+  };
 
   const handleNumFoldsChange = (e) => {
-    setNumFolds(e.target.value)
-  }
+    setNumFolds(e.target.value);
+  };
 
   const handleTrainModel = () => {
     // Implement the logic for training the model
-    console.log('Training model with method:', trainingMethod)
-    console.log('Using parameters:', mode === 'manual' ? params : gridParams)
-    if (trainingMethod === 'split') {
-      console.log('Split ratio:', splitRatio)
+    console.log("Training model with method:", trainingMethod);
+    console.log("Using parameters:", mode === "manual" ? params : gridParams);
+    if (trainingMethod === "split") {
+      console.log("Split ratio:", splitRatio);
     } else {
-      console.log('Number of folds:', numFolds)
+      console.log("Number of folds:", numFolds);
     }
-  }
+  };
 
   return (
     <div className="training-container">
@@ -35,25 +35,29 @@ function Training({ selectedFile, params, gridParams, mode }) {
       <p>Train model by spliting data or cross validation</p>
 
       <div className="selected-params">
-        <h3>Using {mode === 'manual' ? 'Manual' : 'Grid Search'} Parameters</h3>
+        <h3>Using {mode === "manual" ? "Manual" : "Grid Search"} Parameters</h3>
       </div>
 
       <div className="training-methods">
         <button
-          className={`method-button ${trainingMethod === 'split' ? 'selected' : ''}`}
-          onClick={() => handleTrainingMethodChange('split')}
+          className={`method-button ${
+            trainingMethod === "split" ? "selected" : ""
+          }`}
+          onClick={() => handleTrainingMethodChange("split")}
         >
           Split Data
         </button>
         <button
-          className={`method-button ${trainingMethod === 'cross-validation' ? 'selected' : ''}`}
-          onClick={() => handleTrainingMethodChange('cross-validation')}
+          className={`method-button ${
+            trainingMethod === "cross-validation" ? "selected" : ""
+          }`}
+          onClick={() => handleTrainingMethodChange("cross-validation")}
         >
           Cross Validation
         </button>
       </div>
 
-      {trainingMethod === 'split' && (
+      {trainingMethod === "split" && (
         <div className="split-ratio">
           <label>
             Split Ratio (Train/Test):
@@ -72,7 +76,7 @@ function Training({ selectedFile, params, gridParams, mode }) {
         </div>
       )}
 
-      {trainingMethod === 'cross-validation' && (
+      {trainingMethod === "cross-validation" && (
         <div className="num-folds">
           <label>
             Number of Folds:
@@ -91,7 +95,7 @@ function Training({ selectedFile, params, gridParams, mode }) {
         Train Model
       </button>
     </div>
-  )
+  );
 }
 
-export default Training
+export default Training;

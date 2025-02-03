@@ -26,7 +26,8 @@ table {
   margin-bottom: 8px;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #ccc;
   padding: 5px;
 }
@@ -44,7 +45,6 @@ th {
 }
 
 @media (max-width: 900px) {
-
   .file-selection-container {
     flex-direction: column;
   }

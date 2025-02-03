@@ -1,30 +1,38 @@
-import React, { useState } from 'react'
-import './TunningStyles.css'
+import React, { useState } from "react";
+import "./TunningStyles.css";
 
-function Tunning({ selectedFile, params, setParams, gridParams, setGridParams, mode, setMode }) {
+function Tunning({
+  selectedFile,
+  params,
+  setParams,
+  gridParams,
+  setGridParams,
+  mode,
+  setMode,
+}) {
   const handleInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setParams((prevParams) => ({
       ...prevParams,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleGridInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setGridParams((prevGridParams) => ({
       ...prevGridParams,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleGridSearch = () => {
     // Call the API for performing grid search
     // Example: fetch('/api/grid-search', { method: 'POST', body: JSON.stringify(gridParams) })
     // .then(response => response.json())
     // .then(data => console.log(data))
-    console.log('Grid search parameters:', gridParams)
-  }
+    console.log("Grid search parameters:", gridParams);
+  };
 
   return (
     <div className="tunning-container">
@@ -33,14 +41,14 @@ function Tunning({ selectedFile, params, setParams, gridParams, setGridParams, m
 
       <div className="radio-group">
         <button
-          className={`mode-button ${mode === 'manual' ? 'selected' : ''}`}
-          onClick={() => setMode('manual')}
+          className={`mode-button ${mode === "manual" ? "selected" : ""}`}
+          onClick={() => setMode("manual")}
         >
           Manual
         </button>
         <button
-          className={`mode-button ${mode === 'grid' ? 'selected' : ''}`}
-          onClick={() => setMode('grid')}
+          className={`mode-button ${mode === "grid" ? "selected" : ""}`}
+          onClick={() => setMode("grid")}
         >
           Grid Search
         </button>
@@ -241,7 +249,7 @@ function Tunning({ selectedFile, params, setParams, gridParams, setGridParams, m
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Tunning
+export default Tunning;

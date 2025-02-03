@@ -1,5 +1,5 @@
-import React from 'react'
-import './FileSelectionStyles.css'
+import React from "react";
+import "./FileSelectionStyles.css";
 
 function FileSelection({
   selectedFile,
@@ -10,44 +10,46 @@ function FileSelection({
   setHasHeader,
 }) {
   const handleClick = () => {
-    document.getElementById('fileInput').click()
-  }
+    document.getElementById("fileInput").click();
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0]
+      const file = e.target.files[0];
       // Only allow .csv
-      if (!file.name.toLowerCase().endsWith('.csv')) {
-        alert('Only CSV files allowed')
-        return
+      if (!file.name.toLowerCase().endsWith(".csv")) {
+        alert("Only CSV files allowed");
+        return;
       }
 
-      setSelectedFile(file)
+      setSelectedFile(file);
 
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (evt) => {
-        const fileContent = evt.target.result
-        const lines = fileContent.split(/\r?\n/)
+        const fileContent = evt.target.result;
+        const lines = fileContent.split(/\r?\n/);
         // Show first 10 rows
-        setFilePreview(lines.slice(0, 10))
-      }
-      reader.readAsText(file)
+        setFilePreview(lines.slice(0, 10));
+      };
+      reader.readAsText(file);
     }
-  }
+  };
 
   const generateHeaders = (line) => {
-    const columns = line.split(',')
-    return columns.map((_, index) => `x${index + 1}`)
-  }
+    const columns = line.split(",");
+    return columns.map((_, index) =>
+      index === columns.length - 1 ? "class" : `x${index + 1}`
+    );
+  };
 
   const handleDrop = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0]
-      handleFileChange({ target: { files: [file] } })
-      e.dataTransfer.clearData()
+      const file = e.dataTransfer.files[0];
+      handleFileChange({ target: { files: [file] } });
+      e.dataTransfer.clearData();
     }
-  }
+  };
 
   return (
     <div className="file-selection-container">
@@ -59,7 +61,7 @@ function FileSelection({
           type="file"
           accept=".csv"
           id="fileInput"
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
           onChange={handleFileChange}
         />
 
@@ -78,10 +80,7 @@ function FileSelection({
           </label>
         </div>
 
-        {selectedFile && (
-          <p>Selected file: {selectedFile.name}</p>
-        )}
-
+        {selectedFile && <p>Selected file: {selectedFile.name}</p>}
       </div>
 
       {filePreview.length > 0 && (
@@ -90,20 +89,19 @@ function FileSelection({
           <table>
             <thead>
               <tr>
-                {(hasHeader ? filePreview[0].split(',') : generateHeaders(filePreview[0])).map((header, index) => (
-                  <th key={index}>
-                    {header}
-                  </th>
+                {(hasHeader
+                  ? filePreview[0].split(",")
+                  : generateHeaders(filePreview[0])
+                ).map((header, index) => (
+                  <th key={index}>{header}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filePreview.slice(hasHeader ? 1 : 0).map((line, index) => (
                 <tr key={index}>
-                  {line.split(',').map((cell, cellIndex) => (
-                    <td key={cellIndex}>
-                      {cell}
-                    </td>
+                  {line.split(",").map((cell, cellIndex) => (
+                    <td key={cellIndex}>{cell}</td>
                   ))}
                 </tr>
               ))}
@@ -112,7 +110,7 @@ function FileSelection({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default FileSelection
+export default FileSelection;

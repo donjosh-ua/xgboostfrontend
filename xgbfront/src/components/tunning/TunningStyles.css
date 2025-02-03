@@ -36,7 +36,6 @@
 .tunning-container .tunning-sections {
   display: flex;
   justify-content: space-between;
-  
 }
 
 .tunning-container .card {
@@ -53,7 +52,7 @@
   width: 90%;
   border-collapse: collapse;
   margin: 0 auto;
-  margin-bottom: 20px
+  margin-bottom: 20px;
 }
 
 .tunning-container td {
@@ -72,14 +71,13 @@
 
 @media (max-width: 870px) {
   .tunning-container {
-    margin-top: 70px
+    margin-top: 70px;
   }
-
 }
 
 @media (max-width: 600px) {
   .tunning-container {
-    margin-top: 50px
+    margin-top: 50px;
   }
 }
 
