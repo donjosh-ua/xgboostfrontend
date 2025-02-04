@@ -1,8 +1,9 @@
 import React from 'react'
+import './ResultsStyles.css'
 
 function Results() {
   return (
-    <div>
+    <div className="results-container">
       <h2>Results</h2>
       <p>View your model performance here.</p>
     </div>

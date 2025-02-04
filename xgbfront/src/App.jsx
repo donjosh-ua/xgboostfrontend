@@ -3,7 +3,7 @@ import { FaSun, FaMoon } from "react-icons/fa";
 import FileSelection from "./components/fileSelection/FileSelection";
 import Tunning from "./components/tunning/Tunning";
 import Training from "./components/training/Training";
-import Results from "./components/Results";
+import Results from "./components/results/Results";
 import "./App.css";
 
 function App() {

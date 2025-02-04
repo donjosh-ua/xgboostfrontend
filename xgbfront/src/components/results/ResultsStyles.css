@@ -1,0 +1,11 @@
+@media (max-width: 880px) {
+  .results-container {
+    margin-top: 70px;
+  }
+}
+
+@media (max-width: 600px) {
+  .results-container {
+    margin-top: 50px;
+  }
+}

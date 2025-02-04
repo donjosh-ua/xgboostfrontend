@@ -69,15 +69,9 @@
   color: var(--text-color);
 }
 
-@media (max-width: 870px) {
+@media (max-width: 880px) {
   .tunning-container {
     margin-top: 70px;
-  }
-}
-
-@media (max-width: 600px) {
-  .tunning-container {
-    margin-top: 50px;
   }
 }
 
@@ -92,3 +86,34 @@
     width: 400px;
   }
 }
+
+@media (max-width: 600px) {
+  .tunning-container {
+    margin-top: 50px;
+  }
+}
+
+@media (max-width: 400px) {
+
+  .tunning-container .card {
+    width: 90%;
+    /* margin: 0; */
+  }
+
+  .tunning-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }  
+
+  .tunning-container input[type="number"] {
+    width: 60%;
+    padding: 6px;
+    border: 1px solid var(--button-bg-color);
+    border-radius: 4px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+}
+
+
