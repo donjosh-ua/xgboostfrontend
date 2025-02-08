@@ -71,6 +71,13 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+input[type="number"], select {
+  border: 1px solid var(--button-bg-color);
+  border-radius: 4px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
 /* @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

@@ -94,13 +94,6 @@ header button {
   border: none;
 }
 
-input[type="number"], select {
-  border: 1px solid var(--button-bg-color);
-  border-radius: 4px;
-  background-color: var(--background-color);
-  color: var(--text-color);
-}
-
 @media (max-width: 880px) {
   header {
     flex-direction: column;
@@ -113,15 +106,9 @@ input[type="number"], select {
   }
 
   header ul {
-    /* flex-direction: column; */
-    /* width: auto; */
     margin: 0;
   }
 
-  header button {
-    /* width: 100%; */
-    /* margin-bottom: 10px; */
-  }
 
   header img {
     margin-top: 5px;
@@ -141,7 +128,6 @@ input[type="number"], select {
 
 @media (max-width: 600px) {
   header {
-    /* height: auto; */
     height: 110px;
     margin: 0;
     padding: 0;

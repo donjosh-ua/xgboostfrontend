@@ -27,11 +27,19 @@ function Tunning({
   };
 
   const handleGridSearch = () => {
-    // Call the API for performing grid search
-    // Example: fetch('/api/grid-search', { method: 'POST', body: JSON.stringify(gridParams) })
-    // .then(response => response.json())
-    // .then(data => console.log(data))
     console.log("Grid search parameters:", gridParams);
+  };
+
+  const handleLoadParameters = () => {
+    // Send manual parameters to the backend using the /parameters/setparams endpoint.
+    fetch("http://127.0.0.0:8000/parameters/setparams", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parameters: params }),
+    })
+      .then((res) => res.json())
+      .then((data) => console.log("Parameters loaded:", data))
+      .catch((err) => console.error(err));
   };
 
   return (
@@ -247,6 +255,11 @@ function Tunning({
           </table>
           <button onClick={handleGridSearch}>Perform Grid Search</button>
         </div>
+      </div>
+
+      {/* New button for loading manual parameters */}
+      <div style={{ marginTop: "15px" }}>
+        <button onClick={handleLoadParameters}>Load Parameters</button>
       </div>
     </div>
   );

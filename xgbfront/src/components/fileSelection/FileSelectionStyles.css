@@ -47,10 +47,39 @@ label {
   display: block;
 }
 
-select {
+.file-selection select {
+  padding: 8px;
   margin-left: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  
+}
+
+.file-selection-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  font-size: 1.2em;
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.upload-button:hover {
+  background-color: var(--button-hover-border-color);
+  color: white;
 }
 
 @media (max-width: 1100px) {
