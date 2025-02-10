@@ -1,52 +1,83 @@
-import React, { useState } from 'react'
-import './TrainingStyles.css'
+import React, { useEffect, useState } from "react";
+import { FaSpinner } from "react-icons/fa";
+import Toast from "../toast/Toast";
+import "./TrainingStyles.css";
 
-function Training({ selectedFile, params, gridParams, mode }) {
-  const [trainingMethod, setTrainingMethod] = useState('split')
-  const [splitRatio, setSplitRatio] = useState(80)
-  const [numFolds, setNumFolds] = useState(5)
-  const [distribution, setDistribution] = useState('Normal')
-  const [distributionParams, setDistributionParams] = useState({
-    mean: '',
-    stddev: '',
-  })
+function Training({
+  selectedFile,
+  params,
+  gridParams,
+  mode,
+  trainingValues,
+  setTrainingValues,
+}) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [trainMessage, setTrainMessage] = useState("");
 
-  const handleTrainingMethodChange = (method) => {
-    setTrainingMethod(method)
-  }
+  // Persist distributionParams in sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(
+      "distributionParams",
+      JSON.stringify(trainingValues.distributionParams)
+    );
+  }, [trainingValues.distributionParams]);
 
-  const handleSplitRatioChange = (e) => {
-    setSplitRatio(e.target.value)
-  }
-
-  const handleNumFoldsChange = (e) => {
-    setNumFolds(e.target.value)
-  }
-
-  const handleDistributionChange = (e) => {
-    setDistribution(e.target.value)
-  }
+  const handleChange = (key, value) => {
+    setTrainingValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   const handleDistributionParamChange = (e) => {
-    const { name, value } = e.target
-    setDistributionParams((prevParams) => ({
-      ...prevParams,
-      [name]: value,
-    }))
-  }
+    const { name, value } = e.target;
+    setTrainingValues((prev) => ({
+      ...prev,
+      distributionParams: {
+        ...prev.distributionParams,
+        [name]: value,
+      },
+    }));
+  };
 
   const handleTrainModel = () => {
-    // Implement the logic for training the model
-    console.log('Training model with method:', trainingMethod)
-    console.log('Using parameters:', mode === 'manual' ? params : gridParams)
-    console.log('Distribution:', distribution)
-    console.log('Distribution parameters:', distributionParams)
-    if (trainingMethod === 'split') {
-      console.log('Split ratio:', splitRatio)
-    } else {
-      console.log('Number of folds:', numFolds)
-    }
-  }
+    setIsLoading(true);
+    setTrainMessage("");
+    const value =
+      trainingValues.trainingMethod === "split"
+        ? Number(trainingValues.splitRatio)
+        : Number(trainingValues.numFolds);
+    const requestData = {
+      method: trainingValues.trainingMethod,
+      value: value,
+      rounds: Number(trainingValues.rounds),
+      distribution: trainingValues.distribution,
+      params: trainingValues.distributionParams,
+    };
+    fetch("http://127.0.0.0:8000/train/both", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestData),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Training failed with status " + res.status);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Train response:", data);
+        setTrainMessage("Model trained successfully!");
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setTrainMessage(
+          "There was an error training the model. Please try again."
+        );
+        setIsLoading(false);
+      });
+  };
 
   return (
     <div className="training-container">
@@ -54,61 +85,87 @@ function Training({ selectedFile, params, gridParams, mode }) {
       <p>Train model by splitting data or cross-validation</p>
 
       <div className="selected-params">
-        <h3>Using {mode === 'manual' ? 'Manual' : 'Grid Search'} Parameters</h3>
+        <h3>Using {mode === "manual" ? "Manual" : "Grid Search"} Parameters</h3>
       </div>
 
       <div className="training-methods">
         <button
-          className={`method-button ${trainingMethod === 'split' ? 'selected' : ''}`}
-          onClick={() => handleTrainingMethodChange('split')}
+          className={`method-button ${
+            trainingValues.trainingMethod === "split" ? "selected" : ""
+          }`}
+          onClick={() => handleChange("trainingMethod", "split")}
+          disabled={isLoading}
         >
           Split Data
         </button>
         <button
-          className={`method-button ${trainingMethod === 'cross-validation' ? 'selected' : ''}`}
-          onClick={() => handleTrainingMethodChange('cross-validation')}
+          className={`method-button ${
+            trainingValues.trainingMethod === "cv" ? "selected" : ""
+          }`}
+          onClick={() => handleChange("trainingMethod", "cv")}
+          disabled={isLoading}
         >
           Cross Validation
         </button>
       </div>
 
-      {trainingMethod === 'split' && (
+      {trainingValues.trainingMethod === "split" && (
         <div className="split-ratio">
           <label>
             Split Ratio (Train/Test):
             <input
               type="number"
-              value={splitRatio}
-              onChange={handleSplitRatioChange}
+              value={trainingValues.splitRatio}
+              onChange={(e) => handleChange("splitRatio", e.target.value)}
               min="1"
               max="99"
+              disabled={isLoading}
             />
           </label>
           <p>
-            Training: {splitRatio}%, Testing: {100 - splitRatio}%
+            Training: {trainingValues.splitRatio}%, Testing:{" "}
+            {100 - trainingValues.splitRatio}%
           </p>
         </div>
       )}
 
-      {trainingMethod === 'cross-validation' && (
+      {trainingValues.trainingMethod === "cv" && (
         <div className="num-folds">
           <label>
             Number of Folds:
             <input
               type="number"
-              value={numFolds}
-              onChange={handleNumFoldsChange}
+              value={trainingValues.numFolds}
+              onChange={(e) => handleChange("numFolds", e.target.value)}
               min="2"
               max="20"
+              disabled={isLoading}
             />
           </label>
         </div>
       )}
 
+      <div className="rounds-input">
+        <label>
+          Rounds:
+          <input
+            type="number"
+            value={trainingValues.rounds}
+            onChange={(e) => handleChange("rounds", e.target.value)}
+            min="1"
+            disabled={isLoading}
+          />
+        </label>
+      </div>
+
       <div className="distribution-config">
         <label>
           Distribution:
-          <select value={distribution} onChange={handleDistributionChange}>
+          <select
+            value={trainingValues.distribution}
+            onChange={(e) => handleChange("distribution", e.target.value)}
+            disabled={isLoading}
+          >
             <option value="Normal">Normal</option>
             <option value="HalfNormal">HalfNormal</option>
             <option value="Cauchy">Cauchy</option>
@@ -118,7 +175,7 @@ function Training({ selectedFile, params, gridParams, mode }) {
 
         <table>
           <tbody>
-            {distribution === 'Normal' && (
+            {trainingValues.distribution === "Normal" && (
               <>
                 <tr>
                   <td>Mean:</td>
@@ -126,8 +183,9 @@ function Training({ selectedFile, params, gridParams, mode }) {
                     <input
                       type="number"
                       name="mean"
-                      value={distributionParams.mean}
+                      value={trainingValues.distributionParams.mean}
                       onChange={handleDistributionParamChange}
+                      disabled={isLoading}
                     />
                   </td>
                 </tr>
@@ -137,29 +195,29 @@ function Training({ selectedFile, params, gridParams, mode }) {
                     <input
                       type="number"
                       name="sigma"
-                      value={distributionParams.sigma}
+                      value={trainingValues.distributionParams.sigma}
                       onChange={handleDistributionParamChange}
+                      disabled={isLoading}
                     />
                   </td>
                 </tr>
               </>
             )}
-            {distribution === 'HalfNormal' && (
-              <>
-                <tr>
-                  <td>Sigma:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="sigma"
-                      value={distributionParams.sigma}
-                      onChange={handleDistributionParamChange}
-                    />
-                  </td>
-                </tr>
-              </>
+            {trainingValues.distribution === "HalfNormal" && (
+              <tr>
+                <td>Sigma:</td>
+                <td>
+                  <input
+                    type="number"
+                    name="sigma"
+                    value={trainingValues.distributionParams.sigma}
+                    onChange={handleDistributionParamChange}
+                    disabled={isLoading}
+                  />
+                </td>
+              </tr>
             )}
-            {distribution === 'Cauchy' && (
+            {trainingValues.distribution === "Cauchy" && (
               <>
                 <tr>
                   <td>Alpha:</td>
@@ -167,8 +225,9 @@ function Training({ selectedFile, params, gridParams, mode }) {
                     <input
                       type="number"
                       name="alpha"
-                      value={distributionParams.alpha}
+                      value={trainingValues.distributionParams.alpha}
                       onChange={handleDistributionParamChange}
+                      disabled={isLoading}
                     />
                   </td>
                 </tr>
@@ -178,37 +237,51 @@ function Training({ selectedFile, params, gridParams, mode }) {
                     <input
                       type="number"
                       name="beta"
-                      value={distributionParams.beta}
+                      value={trainingValues.distributionParams.beta}
                       onChange={handleDistributionParamChange}
+                      disabled={isLoading}
                     />
                   </td>
                 </tr>
               </>
             )}
-            {distribution === 'Exponential' && (
-              <>
-                <tr>
-                  <td>Lambda:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="lambda"
-                      value={distributionParams.lambda}
-                      onChange={handleDistributionParamChange}
-                    />
-                  </td>
-                </tr>
-              </>
+            {trainingValues.distribution === "Exponential" && (
+              <tr>
+                <td>Lambda:</td>
+                <td>
+                  <input
+                    type="number"
+                    name="lambda"
+                    value={trainingValues.distributionParams.lambda}
+                    onChange={handleDistributionParamChange}
+                    disabled={isLoading}
+                  />
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <button className="train-button" onClick={handleTrainModel}>
-        Train Model
+      <button
+        className="train-button"
+        onClick={handleTrainModel}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <>
+            <FaSpinner className="loadingIcon" /> Training...
+          </>
+        ) : (
+          "Train Model"
+        )}
       </button>
+
+      {trainMessage && (
+        <Toast message={trainMessage} onClose={() => setTrainMessage("")} />
+      )}
     </div>
-  )
+  );
 }
 
-export default Training
+export default Training;

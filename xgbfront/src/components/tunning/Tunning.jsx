@@ -1,8 +1,8 @@
 import React, { useState } from "react";
+import Toast from "../toast/Toast";
 import "./TunningStyles.css";
 
 function Tunning({
-  selectedFile,
   params,
   setParams,
   gridParams,
@@ -10,6 +10,8 @@ function Tunning({
   mode,
   setMode,
 }) {
+  const [toastMessage, setToastMessage] = useState("");
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setParams((prevParams) => ({
@@ -38,8 +40,14 @@ function Tunning({
       body: JSON.stringify({ parameters: params }),
     })
       .then((res) => res.json())
-      .then((data) => console.log("Parameters loaded:", data))
-      .catch((err) => console.error(err));
+      .then((data) => {
+        console.log("Parameters loaded:", data);
+        setToastMessage("Parameters loaded successfully!");
+      })
+      .catch((err) => {
+        console.error(err);
+        setToastMessage("Error loading parameters. Please try again.");
+      });
   };
 
   return (
@@ -96,6 +104,17 @@ function Tunning({
                     type="number"
                     name="maxDepth"
                     value={params.maxDepth}
+                    onChange={handleInputChange}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Number of estimators:</td>
+                <td>
+                  <input
+                    type="number"
+                    name="nEstimators"
+                    value={params.nEstimators}
                     onChange={handleInputChange}
                   />
                 </td>
@@ -197,6 +216,17 @@ function Tunning({
                 </td>
               </tr>
               <tr>
+                <td>Number of estimators:</td>
+                <td>
+                  <input
+                    type="number"
+                    name="n_Estimators"
+                    value={gridParams.nEstimators}
+                    onChange={handleInputChange}
+                  />
+                </td>
+              </tr>
+              <tr>
                 <td>Gamma:</td>
                 <td>
                   <input
@@ -257,10 +287,13 @@ function Tunning({
         </div>
       </div>
 
-      {/* New button for loading manual parameters */}
       <div style={{ marginTop: "15px" }}>
         <button onClick={handleLoadParameters}>Load Parameters</button>
       </div>
+
+      {toastMessage && (
+        <Toast message={toastMessage} onClose={() => setToastMessage("")} />
+      )}
     </div>
   );
 }

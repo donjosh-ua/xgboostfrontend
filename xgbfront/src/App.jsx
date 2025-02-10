@@ -29,6 +29,20 @@ function App() {
     subsample: "",
     colsample_bytree: "",
   });
+  const [trainingValues, setTrainingValues] = useState({
+    trainingMethod: "split",
+    splitRatio: 70,
+    numFolds: 5,
+    rounds: 30,
+    distribution: "Normal",
+    distributionParams: {
+      mean: "",
+      sigma: "",
+      alpha: "",
+      beta: "",
+      lambda: "",
+    },
+  });
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -68,7 +82,7 @@ function App() {
               className={activeStep === 3 ? "active-step" : ""}
               onClick={() => setActiveStep(3)}
             >
-              Results
+              Testing
             </button>
           </ul>
         </nav>
@@ -105,6 +119,8 @@ function App() {
             params={params}
             gridParams={gridParams}
             mode={mode}
+            trainingValues={trainingValues}
+            setTrainingValues={setTrainingValues}
           />
         )}
         {activeStep === 3 && <Results selectedFile={selectedFile} />}

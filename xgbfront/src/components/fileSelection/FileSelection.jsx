@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { FaUpload } from 'react-icons/fa'
-import './FileSelectionStyles.css'
+import React, { useState, useEffect } from "react";
+import { FaUpload } from "react-icons/fa";
+import Toast from "../toast/Toast";
+import "./FileSelectionStyles.css";
 
 function FileSelection({
   selectedFile,
@@ -10,83 +11,91 @@ function FileSelection({
   hasHeader,
   setHasHeader,
 }) {
-  const [separator, setSeparator] = useState(',')
-  const [availableFiles, setAvailableFiles] = useState([])
-  const [selectedFileName, setSelectedFileName] = useState('')
+  const [separator, setSeparator] = useState(",");
+  const [availableFiles, setAvailableFiles] = useState([]);
+  const [selectedFileName, setSelectedFileName] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
 
   const fetchFiles = () => {
-    fetch('http://127.0.0.0:8000/data/files')
+    fetch("http://127.0.0.0:8000/data/files")
       .then((res) => res.json())
       .then((data) => {
-        setAvailableFiles(data.files)
-        sessionStorage.setItem('availableFiles', JSON.stringify(data.files))
+        setAvailableFiles(data.files);
+        sessionStorage.setItem("availableFiles", JSON.stringify(data.files));
       })
-      .catch((err) => console.error(err))
-  }
+      .catch((err) => console.error(err));
+  };
 
   // On mount, load availableFiles and persist selectedFileName from sessionStorage.
   useEffect(() => {
-    const storedFiles = sessionStorage.getItem('availableFiles')
+    const storedFiles = sessionStorage.getItem("availableFiles");
     if (storedFiles) {
-      setAvailableFiles(JSON.parse(storedFiles))
+      setAvailableFiles(JSON.parse(storedFiles));
     } else {
-      fetchFiles()
+      fetchFiles();
     }
-    const storedSelected = sessionStorage.getItem('selectedFileName')
+    const storedSelected = sessionStorage.getItem("selectedFileName");
     if (storedSelected) {
-      setSelectedFileName(storedSelected)
+      setSelectedFileName(storedSelected);
     }
-  }, [])
+  }, []);
 
   const handleComboChange = (e) => {
-    const filename = e.target.value
-    setSelectedFileName(filename)
+    const filename = e.target.value;
+    setSelectedFileName(filename);
     // Persist the selected file in sessionStorage.
-    sessionStorage.setItem('selectedFileName', filename)
+    sessionStorage.setItem("selectedFileName", filename);
+
+    if (!filename) {
+      setFilePreview([]);
+      setSelectedFile(null);
+      return;
+    }
+
     // Send a POST request with the filename.
-    fetch('http://127.0.0.0:8000/data/select', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("http://127.0.0.0:8000/data/select", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ filename }),
     })
       .then((res) => res.json())
       .then((data) => {
-        setFilePreview(data.preview)
-        setSelectedFile({ name: filename })
+        setFilePreview(data.preview);
+        setSelectedFile({ name: filename });
       })
-      .catch((err) => console.error(err))
-  }
+      .catch((err) => console.error(err));
+  };
 
   const handleClick = () => {
-    document.getElementById('fileInput').click()
-  }
+    document.getElementById("fileInput").click();
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0]
-      if (!file.name.toLowerCase().endsWith('.csv')) {
-        alert('Only CSV files allowed')
-        return
+      const file = e.target.files[0];
+      if (!file.name.toLowerCase().endsWith(".csv")) {
+        alert("Only CSV files allowed");
+        return;
       }
-      setSelectedFile(file)
-      const reader = new FileReader()
+      setSelectedFile(file);
+      const reader = new FileReader();
       reader.onload = (evt) => {
-        const fileContent = evt.target.result
-        const lines = fileContent.split(/\r?\n/)
-        setFilePreview(lines.slice(0, 10))
-      }
-      reader.readAsText(file)
+        const fileContent = evt.target.result;
+        const lines = fileContent.split(/\r?\n/);
+        setFilePreview(lines.slice(0, 10));
+      };
+      reader.readAsText(file);
     }
-  }
+  };
 
   const handleLoadFile = () => {
     if (!selectedFile) {
-      alert('No file selected')
-      return
+      alert("No file selected");
+      return;
     }
-    fetch('http://127.0.0.0:8000/data/load', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch("http://127.0.0.0:8000/data/load", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         filename: selectedFile.name,
         has_header: hasHeader,
@@ -95,26 +104,30 @@ function FileSelection({
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log('Load file response:', data)
+        console.log("Load file response:", data);
+        setToastMessage("File loaded successfully!");
       })
-      .catch((err) => console.error(err))
-  }
+      .catch((err) => {
+        console.error(err);
+        setToastMessage("Error loading file. Please try again.");
+      });
+  };
 
   const generateHeaders = (line) => {
-    const columns = line.split(separator)
+    const columns = line.split(separator);
     return columns.map((_, index) =>
-      index === columns.length - 1 ? 'class' : `x${index + 1}`
-    )
-  }
+      index === columns.length - 1 ? "class" : `x${index + 1}`
+    );
+  };
 
   const handleDrop = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0]
-      handleFileChange({ target: { files: [file] } })
-      e.dataTransfer.clearData()
+      const file = e.dataTransfer.files[0];
+      handleFileChange({ target: { files: [file] } });
+      e.dataTransfer.clearData();
     }
-  }
+  };
 
   return (
     <div className="file-selection-container">
@@ -125,7 +138,7 @@ function FileSelection({
           type="file"
           accept=".csv"
           id="fileInput"
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
           onChange={handleFileChange}
         />
         <div className="file-selection-controls">
@@ -137,13 +150,9 @@ function FileSelection({
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            className="upload-button"
-            onClick={handleClick}
-          >
-            <FaUpload />
-          </button>
+          {/* <button type="button" className="upload-button" onClick={handleClick}> */}
+          {/* <FaUpload /> */}
+          {/* </button> */}
         </div>
         <div>
           <label>
@@ -171,7 +180,7 @@ function FileSelection({
           </label>
         </div>
         {selectedFile && <p>Selected file: {selectedFile.name}</p>}
-        <div style={{ marginTop: '15px' }}>
+        <div style={{ marginTop: "15px" }}>
           <button type="button" onClick={handleLoadFile}>
             Load File
           </button>
@@ -205,8 +214,12 @@ function FileSelection({
           </div>
         </div>
       )}
+
+      {toastMessage && (
+        <Toast message={toastMessage} onClose={() => setToastMessage("")} />
+      )}
     </div>
-  )
+  );
 }
 
-export default FileSelection
+export default FileSelection;

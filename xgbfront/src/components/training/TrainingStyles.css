@@ -1,5 +1,4 @@
 .training-container {
-  /* padding: 20px; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8,14 +7,14 @@
 .training-methods {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .method-button {
   border: 1px solid #ccc;
   background-color: var(--background-color);
   color: var(--text-color);
-  margin: 0 10px;
+  margin: 0 5px;
   width: 160px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -37,12 +36,6 @@
   color: white;
 }
 
-.split-ratio,
-.num-folds,
-.distribution-config {
-  margin-bottom: 20px;
-}
-
 .split-ratio label,
 .num-folds label,
 .distribution-config label {
@@ -52,7 +45,8 @@
 
 .split-ratio input,
 .num-folds input,
-.distribution-config input {
+.distribution-config input,
+.rounds-input input{
   width: 50px;
   padding: 8px;
   margin-left: 10px;
@@ -70,7 +64,6 @@
 }
 
 .distribution-config table {
-  /* margin-top: 10px; */
   border-collapse: collapse;
   width: 320px;
 }
@@ -108,6 +101,16 @@
 
 .train-button:hover {
   background-color: var(--button-hover-border-color);
+}
+
+.loadingIcon {
+  animation: spin 1s linear infinite;
+  margin-right: 5px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @media (max-width: 880px) {
