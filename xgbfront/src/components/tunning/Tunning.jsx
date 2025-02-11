@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FaSpinner } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./TunningStyles.css";
 
@@ -11,6 +12,7 @@ function Tunning({
   setMode,
 }) {
   const [toastMessage, setToastMessage] = useState("");
+  const [gridSearchLoading, setGridSearchLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,15 +31,41 @@ function Tunning({
   };
 
   const handleGridSearch = () => {
-    console.log("Grid search parameters:", gridParams);
+    setGridSearchLoading(true);
+    fetch("http://127.0.0.0:8000/parameters/grid_search", {
+      method: "GET",
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Grid search failed with status " + res.status);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Best parameters:", data);
+        // Use "best_parameters" key from backend response to update gridParams
+        if (data.best_parameters) {
+          setGridParams(data.best_parameters);
+          setToastMessage("Grid search completed successfully!");
+        } else {
+          setToastMessage("No best parameters were returned.");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setToastMessage("Error during grid search. Please try again.");
+      })
+      .finally(() => {
+        setGridSearchLoading(false);
+      });
   };
 
   const handleLoadParameters = () => {
-    // Send manual parameters to the backend using the /parameters/setparams endpoint.
+    const selectedParams = mode === "manual" ? params : gridParams;
     fetch("http://127.0.0.0:8000/parameters/setparams", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parameters: params }),
+      body: JSON.stringify({ parameters: selectedParams }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -76,17 +104,6 @@ function Tunning({
           <table>
             <tbody>
               <tr>
-                <td>Seed:</td>
-                <td>
-                  <input
-                    type="number"
-                    name="seed"
-                    value={params.seed}
-                    onChange={handleInputChange}
-                  />
-                </td>
-              </tr>
-              <tr>
                 <td>Eta:</td>
                 <td>
                   <input
@@ -104,17 +121,6 @@ function Tunning({
                     type="number"
                     name="maxDepth"
                     value={params.maxDepth}
-                    onChange={handleInputChange}
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td>Number of estimators:</td>
-                <td>
-                  <input
-                    type="number"
-                    name="nEstimators"
-                    value={params.nEstimators}
                     onChange={handleInputChange}
                   />
                 </td>
@@ -183,23 +189,12 @@ function Tunning({
           <table>
             <tbody>
               <tr>
-                <td>Seed:</td>
-                <td>
-                  <input
-                    type="number"
-                    name="seed"
-                    value={gridParams.seed}
-                    onChange={handleGridInputChange}
-                  />
-                </td>
-              </tr>
-              <tr>
                 <td>Eta:</td>
                 <td>
                   <input
                     type="number"
                     name="eta"
-                    value={gridParams.eta}
+                    value={gridParams.eta || ""}
                     onChange={handleGridInputChange}
                   />
                 </td>
@@ -210,19 +205,8 @@ function Tunning({
                   <input
                     type="number"
                     name="max_depth"
-                    value={gridParams.max_depth}
+                    value={gridParams.max_depth || ""}
                     onChange={handleGridInputChange}
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td>Number of estimators:</td>
-                <td>
-                  <input
-                    type="number"
-                    name="n_Estimators"
-                    value={gridParams.nEstimators}
-                    onChange={handleInputChange}
                   />
                 </td>
               </tr>
@@ -232,7 +216,7 @@ function Tunning({
                   <input
                     type="number"
                     name="gamma"
-                    value={gridParams.gamma}
+                    value={gridParams.gamma || ""}
                     onChange={handleGridInputChange}
                   />
                 </td>
@@ -243,7 +227,7 @@ function Tunning({
                   <input
                     type="number"
                     name="learning_rate"
-                    value={gridParams.learning_rate}
+                    value={gridParams.learning_rate || ""}
                     onChange={handleGridInputChange}
                   />
                 </td>
@@ -254,7 +238,7 @@ function Tunning({
                   <input
                     type="number"
                     name="min_child_weight"
-                    value={gridParams.min_child_weight}
+                    value={gridParams.min_child_weight || ""}
                     onChange={handleGridInputChange}
                   />
                 </td>
@@ -265,7 +249,7 @@ function Tunning({
                   <input
                     type="number"
                     name="subsample"
-                    value={gridParams.subsample}
+                    value={gridParams.subsample || ""}
                     onChange={handleGridInputChange}
                   />
                 </td>
@@ -276,14 +260,22 @@ function Tunning({
                   <input
                     type="number"
                     name="colsample_bytree"
-                    value={gridParams.colsample_bytree}
+                    value={gridParams.colsample_bytree || ""}
                     onChange={handleGridInputChange}
                   />
                 </td>
               </tr>
             </tbody>
           </table>
-          <button onClick={handleGridSearch}>Perform Grid Search</button>
+          <button onClick={handleGridSearch} disabled={gridSearchLoading}>
+            {gridSearchLoading ? (
+              <>
+                <FaSpinner className="loadingIcon" /> Searching...
+              </>
+            ) : (
+              "Perform Grid Search"
+            )}
+          </button>
         </div>
       </div>
 

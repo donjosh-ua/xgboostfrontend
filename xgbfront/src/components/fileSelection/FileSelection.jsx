@@ -26,14 +26,8 @@ function FileSelection({
       .catch((err) => console.error(err));
   };
 
-  // On mount, load availableFiles and persist selectedFileName from sessionStorage.
   useEffect(() => {
-    const storedFiles = sessionStorage.getItem("availableFiles");
-    if (storedFiles) {
-      setAvailableFiles(JSON.parse(storedFiles));
-    } else {
-      fetchFiles();
-    }
+    fetchFiles();
     const storedSelected = sessionStorage.getItem("selectedFileName");
     if (storedSelected) {
       setSelectedFileName(storedSelected);
@@ -43,7 +37,6 @@ function FileSelection({
   const handleComboChange = (e) => {
     const filename = e.target.value;
     setSelectedFileName(filename);
-    // Persist the selected file in sessionStorage.
     sessionStorage.setItem("selectedFileName", filename);
 
     if (!filename) {
@@ -52,7 +45,6 @@ function FileSelection({
       return;
     }
 
-    // Send a POST request with the filename.
     fetch("http://127.0.0.0:8000/data/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -150,9 +142,6 @@ function FileSelection({
               </option>
             ))}
           </select>
-          {/* <button type="button" className="upload-button" onClick={handleClick}> */}
-          {/* <FaUpload /> */}
-          {/* </button> */}
         </div>
         <div>
           <label>
