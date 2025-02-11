@@ -13,6 +13,7 @@ function Tunning({
 }) {
   const [toastMessage, setToastMessage] = useState("");
   const [gridSearchLoading, setGridSearchLoading] = useState(false);
+  const url = import.meta.env.VITE_BASE_URL;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,7 +33,7 @@ function Tunning({
 
   const handleGridSearch = () => {
     setGridSearchLoading(true);
-    fetch("http://127.0.0.0:8000/parameters/grid_search", {
+    fetch(`${url}/parameters/grid_search`, {
       method: "GET",
     })
       .then((res) => {
@@ -42,8 +43,6 @@ function Tunning({
         return res.json();
       })
       .then((data) => {
-        console.log("Best parameters:", data);
-        // Use "best_parameters" key from backend response to update gridParams
         if (data.best_parameters) {
           setGridParams(data.best_parameters);
           setToastMessage("Grid search completed successfully!");
@@ -62,7 +61,7 @@ function Tunning({
 
   const handleLoadParameters = () => {
     const selectedParams = mode === "manual" ? params : gridParams;
-    fetch("http://127.0.0.0:8000/parameters/setparams", {
+    fetch(`${url}/parameters/setparams`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ parameters: selectedParams }),

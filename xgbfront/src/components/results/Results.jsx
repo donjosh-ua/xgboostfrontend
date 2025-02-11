@@ -8,8 +8,8 @@ function Results() {
   const [isTesting, setIsTesting] = useState(false);
   const [resultsImages, setResultsImages] = useState({});
   const [modalImage, setModalImage] = useState(null);
+  const url = import.meta.env.VITE_BASE_URL;
 
-  // On mount, load cached images from localStorage
   useEffect(() => {
     const cachedImages = localStorage.getItem("resultsImages");
     if (cachedImages) {
@@ -20,7 +20,7 @@ function Results() {
   const handleTestRun = () => {
     setIsTesting(true);
     setToastMessage("");
-    fetch("http://127.0.0.0:8000/test/run", {
+    fetch(`${url}/test/run`, {
       method: "POST",
     })
       .then((res) => {
@@ -33,7 +33,6 @@ function Results() {
         console.log("Test run response:", data);
         if (data.images && typeof data.images === "object") {
           setResultsImages(data.images);
-          // Cache the images in localStorage for faster loading later
           localStorage.setItem("resultsImages", JSON.stringify(data.images));
           setToastMessage(data.message || "Test run completed successfully!");
         } else {

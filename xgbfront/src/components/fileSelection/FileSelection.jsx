@@ -15,9 +15,10 @@ function FileSelection({
   const [availableFiles, setAvailableFiles] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const url = import.meta.env.VITE_BASE_URL
 
   const fetchFiles = () => {
-    fetch("http://127.0.0.0:8000/data/files")
+    fetch(`${url}/data/files`)
       .then((res) => res.json())
       .then((data) => {
         setAvailableFiles(data.files);
@@ -45,7 +46,7 @@ function FileSelection({
       return;
     }
 
-    fetch("http://127.0.0.0:8000/data/select", {
+    fetch(`${url}/data/select`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ filename }),
@@ -85,7 +86,7 @@ function FileSelection({
       alert("No file selected");
       return;
     }
-    fetch("http://127.0.0.0:8000/data/load", {
+    fetch(`${url}/data/load`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

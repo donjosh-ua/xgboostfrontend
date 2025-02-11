@@ -13,8 +13,8 @@ function Training({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainMessage, setTrainMessage] = useState("");
+  const url = import.meta.env.VITE_BASE_URL;
 
-  // Persist distributionParams in sessionStorage
   useEffect(() => {
     sessionStorage.setItem(
       "distributionParams",
@@ -54,7 +54,7 @@ function Training({
       distribution: trainingValues.distribution,
       params: trainingValues.distributionParams,
     };
-    fetch("http://127.0.0.0:8000/train/both", {
+    fetch(`${url}/train/both`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestData),
