@@ -15,7 +15,11 @@ function Training({
   const [trainMessage, setTrainMessage] = useState("");
   const url = import.meta.env.VITE_BASE_URL;
 
+  // Restore loading state on mount
   useEffect(() => {
+    if (sessionStorage.getItem("trainingLoading") === "true") {
+      setIsLoading(true);
+    }
     sessionStorage.setItem(
       "distributionParams",
       JSON.stringify(trainingValues.distributionParams)
@@ -42,6 +46,7 @@ function Training({
 
   const handleTrainModel = () => {
     setIsLoading(true);
+    sessionStorage.setItem("trainingLoading", "true");
     setTrainMessage("");
     const value =
       trainingValues.trainingMethod === "split"
@@ -68,14 +73,14 @@ function Training({
       .then((data) => {
         console.log("Train response:", data);
         setTrainMessage("Model trained successfully!");
-        setIsLoading(false);
       })
       .catch((err) => {
         console.error(err);
-        setTrainMessage(
-          "There was an error training the model. Please try again."
-        );
+        setTrainMessage("There was an error training the model. Please try again.");
+      })
+      .finally(() => {
         setIsLoading(false);
+        sessionStorage.removeItem("trainingLoading");
       });
   };
 
@@ -123,8 +128,7 @@ function Training({
             />
           </label>
           <p>
-            Training: {trainingValues.splitRatio}%, Testing:{" "}
-            {100 - trainingValues.splitRatio}%
+            Training: {trainingValues.splitRatio}%, Testing: {100 - trainingValues.splitRatio}%
           </p>
         </div>
       )}

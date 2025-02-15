@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaUpload } from "react-icons/fa";
+import { FaUpload, FaSpinner } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./FileSelectionStyles.css";
 
@@ -15,7 +15,8 @@ function FileSelection({
   const [availableFiles, setAvailableFiles] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [toastMessage, setToastMessage] = useState("");
-  const url = import.meta.env.VITE_BASE_URL
+  const [isLoading, setIsLoading] = useState(false);
+  const url = import.meta.env.VITE_BASE_URL;
 
   const fetchFiles = () => {
     fetch(`${url}/data/files`)
@@ -32,6 +33,10 @@ function FileSelection({
     const storedSelected = sessionStorage.getItem("selectedFileName");
     if (storedSelected) {
       setSelectedFileName(storedSelected);
+    }
+    // On mount, persist loading state if it was set
+    if (sessionStorage.getItem("fileLoading") === "true") {
+      setIsLoading(true);
     }
   }, []);
 
@@ -86,6 +91,8 @@ function FileSelection({
       alert("No file selected");
       return;
     }
+    setIsLoading(true);
+    sessionStorage.setItem("fileLoading", "true");
     fetch(`${url}/data/load`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -103,6 +110,10 @@ function FileSelection({
       .catch((err) => {
         console.error(err);
         setToastMessage("Error loading file. Please try again.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+        sessionStorage.removeItem("fileLoading");
       });
   };
 
@@ -143,6 +154,9 @@ function FileSelection({
               </option>
             ))}
           </select>
+          <button type="button" className="upload-button" onClick={handleClick}>
+            <FaUpload />
+          </button>
         </div>
         <div>
           <label>
@@ -171,8 +185,14 @@ function FileSelection({
         </div>
         {selectedFile && <p>Selected file: {selectedFile.name}</p>}
         <div style={{ marginTop: "15px" }}>
-          <button type="button" onClick={handleLoadFile}>
-            Load File
+          <button type="button" onClick={handleLoadFile} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <FaSpinner className="loadingIcon" /> Loading...
+              </>
+            ) : (
+              "Load File"
+            )}
           </button>
         </div>
       </div>

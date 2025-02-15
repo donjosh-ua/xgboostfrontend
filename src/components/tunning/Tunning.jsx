@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaSpinner } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./TunningStyles.css";
@@ -13,7 +13,18 @@ function Tunning({
 }) {
   const [toastMessage, setToastMessage] = useState("");
   const [gridSearchLoading, setGridSearchLoading] = useState(false);
+  const [paramsLoading, setParamsLoading] = useState(false);
   const url = import.meta.env.VITE_BASE_URL;
+
+  // On mount, restore loading states from sessionStorage
+  useEffect(() => {
+    if (sessionStorage.getItem("gridSearchLoading") === "true") {
+      setGridSearchLoading(true);
+    }
+    if (sessionStorage.getItem("paramsLoading") === "true") {
+      setParamsLoading(true);
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -33,6 +44,7 @@ function Tunning({
 
   const handleGridSearch = () => {
     setGridSearchLoading(true);
+    sessionStorage.setItem("gridSearchLoading", "true");
     fetch(`${url}/parameters/grid_search`, {
       method: "GET",
     })
@@ -56,11 +68,14 @@ function Tunning({
       })
       .finally(() => {
         setGridSearchLoading(false);
+        sessionStorage.removeItem("gridSearchLoading");
       });
   };
 
   const handleLoadParameters = () => {
     const selectedParams = mode === "manual" ? params : gridParams;
+    setParamsLoading(true);
+    sessionStorage.setItem("paramsLoading", "true");
     fetch(`${url}/parameters/setparams`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -74,6 +89,10 @@ function Tunning({
       .catch((err) => {
         console.error(err);
         setToastMessage("Error loading parameters. Please try again.");
+      })
+      .finally(() => {
+        setParamsLoading(false);
+        sessionStorage.removeItem("paramsLoading");
       });
   };
 
@@ -279,7 +298,15 @@ function Tunning({
       </div>
 
       <div style={{ marginTop: "15px" }}>
-        <button onClick={handleLoadParameters}>Load Parameters</button>
+        <button onClick={handleLoadParameters} disabled={paramsLoading}>
+          {paramsLoading ? (
+            <>
+              <FaSpinner className="loadingIcon" /> Loading...
+            </>
+          ) : (
+            "Load Parameters"
+          )}
+        </button>
       </div>
 
       {toastMessage && (

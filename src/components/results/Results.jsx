@@ -15,10 +15,14 @@ function Results() {
     if (cachedImages) {
       setResultsImages(JSON.parse(cachedImages));
     }
+    if (sessionStorage.getItem("resultsTesting") === "true") {
+      setIsTesting(true);
+    }
   }, []);
 
   const handleTestRun = () => {
     setIsTesting(true);
+    sessionStorage.setItem("resultsTesting", "true");
     setToastMessage("");
     fetch(`${url}/test/run`, {
       method: "POST",
@@ -40,12 +44,14 @@ function Results() {
           localStorage.removeItem("resultsImages");
           setToastMessage("Test run completed, but no images were returned.");
         }
-        setIsTesting(false);
       })
       .catch((err) => {
         console.error(err);
         setToastMessage("Error during test run. Please try again.");
+      })
+      .finally(() => {
         setIsTesting(false);
+        sessionStorage.removeItem("resultsTesting");
       });
   };
 
