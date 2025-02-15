@@ -154,9 +154,6 @@ function FileSelection({
               </option>
             ))}
           </select>
-          // <button type="button" className="upload-button" onClick={handleClick}>
-          //   <FaUpload />
-          // </button>
         </div>
         <div>
           <label>
