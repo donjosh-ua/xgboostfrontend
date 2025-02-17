@@ -99,7 +99,7 @@ function Tunning({
   return (
     <div className="tunning-container">
       <h2>Tunning</h2>
-      <p>Tune hyperparameters manually or by grid search</p>
+      <p>Select which set of parameters you are gonna use for training</p>
 
       <div className="radio-group">
         <button

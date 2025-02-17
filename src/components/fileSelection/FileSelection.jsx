@@ -15,7 +15,12 @@ function FileSelection({
   const [availableFiles, setAvailableFiles] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [toastMessage, setToastMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  // Separate loading states for load/upload and delete operations
+  const [isLoadFileLoading, setIsLoadFileLoading] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  // fileSource indicates whether the file was chosen from the combo ("combo")
+  // or from the file system ("system")
+  const [fileSource, setFileSource] = useState("");
   const url = import.meta.env.VITE_BASE_URL;
 
   const fetchFiles = () => {
@@ -33,10 +38,7 @@ function FileSelection({
     const storedSelected = sessionStorage.getItem("selectedFileName");
     if (storedSelected) {
       setSelectedFileName(storedSelected);
-    }
-    // On mount, persist loading state if it was set
-    if (sessionStorage.getItem("fileLoading") === "true") {
-      setIsLoading(true);
+      setFileSource("combo");
     }
   }, []);
 
@@ -44,6 +46,7 @@ function FileSelection({
     const filename = e.target.value;
     setSelectedFileName(filename);
     sessionStorage.setItem("selectedFileName", filename);
+    setFileSource("combo");
 
     if (!filename) {
       setFilePreview([]);
@@ -68,6 +71,7 @@ function FileSelection({
     document.getElementById("fileInput").click();
   };
 
+  // When a file is selected from the system
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -75,6 +79,15 @@ function FileSelection({
         alert("Only CSV files allowed");
         return;
       }
+      // Clear previous combo selection
+      setSelectedFileName("");
+      sessionStorage.removeItem("selectedFileName");
+      setFilePreview([]);
+      setSelectedFile(null);
+      // Mark file source as system
+      setFileSource("system");
+
+      // Set preview locally without uploading yet
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onload = (evt) => {
@@ -86,34 +99,92 @@ function FileSelection({
     }
   };
 
+  // The button now conditionally uploads the file if selected from system,
+  // or loads the file if selected from combo.
   const handleLoadFile = () => {
     if (!selectedFile) {
       alert("No file selected");
       return;
     }
-    setIsLoading(true);
-    sessionStorage.setItem("fileLoading", "true");
-    fetch(`${url}/data/load`, {
-      method: "POST",
+    setIsLoadFileLoading(true);
+
+    if (fileSource === "system") {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      
+      fetch(`${url}/data/upload`, {
+        method: "POST",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Upload response:", data);
+          setToastMessage(data.message);
+          fetchFiles();
+          setSelectedFileName(selectedFile.name);
+        })
+        .catch((err) => {
+          console.error(err);
+          setToastMessage("Error uploading file. Please try again.");
+        })
+        .finally(() => {
+          setIsLoadFileLoading(false);
+        });
+    } else {
+      fetch(`${url}/data/load`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: selectedFile.name,
+          has_header: hasHeader,
+          separator,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Load file response:", data);
+          setToastMessage("File loaded successfully!");
+        })
+        .catch((err) => {
+          console.error(err);
+          setToastMessage("Error loading file. Please try again.");
+        })
+        .finally(() => {
+          setIsLoadFileLoading(false);
+        });
+    }
+  };
+
+  const handleDeleteFile = () => {
+    if (!selectedFileName) {
+      alert("No file selected");
+      return;
+    }
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${selectedFileName}?`);
+    if (!confirmDelete) return;
+  
+    setIsDeleteLoading(true);
+  
+    fetch(`${url}/data/delete`, {
+      method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        filename: selectedFile.name,
-        has_header: hasHeader,
-        separator,
-      }),
+      body: JSON.stringify({ filename: selectedFileName }),
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log("Load file response:", data);
-        setToastMessage("File loaded successfully!");
+        console.log("Delete response:", data);
+        setToastMessage(data.message);
+        setSelectedFileName("");
+        setSelectedFile(null);
+        setFilePreview([]);
+        fetchFiles();
       })
       .catch((err) => {
         console.error(err);
-        setToastMessage("Error loading file. Please try again.");
+        setToastMessage("Error deleting file. Please try again.");
       })
       .finally(() => {
-        setIsLoading(false);
-        sessionStorage.removeItem("fileLoading");
+        setIsDeleteLoading(false);
       });
   };
 
@@ -154,6 +225,14 @@ function FileSelection({
               </option>
             ))}
           </select>
+          <button
+            type="button"
+            className="upload-button"
+            onClick={handleClick}
+            disabled={isLoadFileLoading || isDeleteLoading}
+          >
+            <FaUpload />
+          </button>
         </div>
         <div>
           <label>
@@ -181,14 +260,32 @@ function FileSelection({
           </label>
         </div>
         {selectedFile && <p>Selected file: {selectedFile.name}</p>}
-        <div style={{ marginTop: "15px" }}>
-          <button type="button" onClick={handleLoadFile} disabled={isLoading}>
-            {isLoading ? (
+        <div className="file-selection-actions">
+          <button
+            type="button"
+            onClick={handleLoadFile}
+            disabled={isLoadFileLoading || isDeleteLoading}
+          >
+            {isLoadFileLoading ? (
               <>
-                <FaSpinner className="loadingIcon" /> Loading...
+                <FaSpinner className="loadingIcon" />{" "}
+                {fileSource === "system" ? "Uploading..." : "Loading..."}
               </>
             ) : (
-              "Load File"
+              fileSource === "system" ? "Upload File" : "Load File"
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteFile}
+            disabled={isDeleteLoading || isLoadFileLoading || !selectedFileName}
+          >
+            {isDeleteLoading ? (
+              <>
+                <FaSpinner className="loadingIcon" /> Deleting...
+              </>
+            ) : (
+              "Delete File"
             )}
           </button>
         </div>

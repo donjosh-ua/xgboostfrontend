@@ -14,8 +14,17 @@
 }
 
 .table-container {
-  max-height: 400px; /* Adjust the height as needed */
+  max-height: 400px;
   overflow: auto;
+}
+
+.file-selection-actions {
+  margin-top: 20px;
+}
+
+.file-selection-actions button {
+  width: 120px;
+  margin: 0 5px;
 }
 
 table {
