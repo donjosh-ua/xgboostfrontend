@@ -52,13 +52,23 @@ function Training({
       trainingValues.trainingMethod === "split"
         ? Number(trainingValues.splitRatio)
         : Number(trainingValues.numFolds);
+  
+    // Convert distribution parameter values to numbers
+    const parsedDistributionParams = Object.fromEntries(
+      Object.entries(trainingValues.distributionParams).map(([key, value]) => [
+        key,
+        Number(value),
+      ])
+    );
+  
     const requestData = {
       method: trainingValues.trainingMethod,
       value: value,
       rounds: Number(trainingValues.rounds),
       distribution: trainingValues.distribution,
-      params: trainingValues.distributionParams,
+      params: parsedDistributionParams,
     };
+  
     fetch(`${url}/train/both`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

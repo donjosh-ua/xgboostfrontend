@@ -74,12 +74,16 @@ function Tunning({
 
   const handleLoadParameters = () => {
     const selectedParams = mode === "manual" ? params : gridParams;
+    // Convert all parameter values to numbers
+    const parsedParams = Object.fromEntries(
+      Object.entries(selectedParams).map(([key, value]) => [key, Number(value)])
+    );
     setParamsLoading(true);
     sessionStorage.setItem("paramsLoading", "true");
     fetch(`${url}/parameters/setparams`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parameters: selectedParams }),
+      body: JSON.stringify({ parameters: parsedParams }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -127,7 +131,7 @@ function Tunning({
                   <input
                     type="number"
                     name="eta"
-                    value={params.eta}
+                    value={params.eta || ""}
                     onChange={handleInputChange}
                   />
                 </td>
@@ -137,8 +141,8 @@ function Tunning({
                 <td>
                   <input
                     type="number"
-                    name="maxDepth"
-                    value={params.maxDepth}
+                    name="max_depth"
+                    value={params.max_depth || ""}
                     onChange={handleInputChange}
                   />
                 </td>
@@ -149,7 +153,7 @@ function Tunning({
                   <input
                     type="number"
                     name="gamma"
-                    value={params.gamma}
+                    value={params.gamma || ""}
                     onChange={handleInputChange}
                   />
                 </td>
@@ -159,8 +163,8 @@ function Tunning({
                 <td>
                   <input
                     type="number"
-                    name="learningRate"
-                    value={params.learningRate}
+                    name="learning_rate"
+                    value={params.learning_rate || ""}
                     onChange={handleInputChange}
                   />
                 </td>
@@ -170,8 +174,8 @@ function Tunning({
                 <td>
                   <input
                     type="number"
-                    name="minChildWeight"
-                    value={params.minChildWeight}
+                    name="min_child_weight"
+                    value={params.min_child_weight || ""}
                     onChange={handleInputChange}
                   />
                 </td>
@@ -182,7 +186,7 @@ function Tunning({
                   <input
                     type="number"
                     name="subsample"
-                    value={params.subsample}
+                    value={params.subsample || ""}
                     onChange={handleInputChange}
                   />
                 </td>
@@ -192,8 +196,8 @@ function Tunning({
                 <td>
                   <input
                     type="number"
-                    name="colsampleBytree"
-                    value={params.colsampleBytree}
+                    name="colsample_bytree"
+                    value={params.colsample_bytree || ""}
                     onChange={handleInputChange}
                   />
                 </td>
