@@ -14,13 +14,15 @@ function App() {
   const [theme, setTheme] = useState("light");
   const [mode, setMode] = useState("manual");
   const [params, setParams] = useState({
-    learningRate: "",
-    nEstimators: "",
-    maxDepth: "",
-    // Add more parameters as needed
+    eta: "",
+    max_depth: "",
+    gamma: "",
+    learning_rate: "",
+    min_child_weight: "",
+    subsample: "",
+    colsample_bytree: "",
   });
   const [gridParams, setGridParams] = useState({
-    seed: "",
     eta: "",
     max_depth: "",
     gamma: "",
