@@ -417,7 +417,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       <div className="tunning-sections">
         <div className="nn-card nn-architecture-card">
           <div className="collapsible-header" onClick={toggleArchitecture}>
-            <h3>Network Architecture</h3>
+            <h3>Architecture</h3>
             {architectureOpen ? <FaChevronUp /> : <FaChevronDown />}
           </div>
 
@@ -687,7 +687,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         </div>
 
         <div className="nn-card">
-          <h3>Training Parameters</h3>
+          <h3>Hyperparameters</h3>
           <div className="table-container">
             <table>
               <tbody>
@@ -938,7 +938,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
               <FaSpinner className="loadingIcon" /> Saving Parameters...
             </>
           ) : (
-            "Save Parameters"
+            "Save Configuration"
           )}
         </button>
       </div>
