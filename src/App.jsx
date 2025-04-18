@@ -42,6 +42,7 @@ function App() {
     batch_size: "32",
     epochs: "10",
     dropout_rate: "0.2",
+    layers: [{ neurons: "10", activation: "relu" }],
   });
   const [trainingValues, setTrainingValues] = useState({
     trainingMethod: "split",

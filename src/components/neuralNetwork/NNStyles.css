@@ -39,16 +39,20 @@
 
 .tunning-sections {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 20px;
-  justify-content: center;
   width: 100%;
+  max-width: 900px;
   margin: 0 auto;
+  align-items: center;
 }
 
 .tunning-sections .nn-card {
-  flex: 1;
-  min-width: 300px;
+  width: 100%;
+}
+
+.tunning-sections .nn-card:not(.nn-architecture-card) {
+  max-width: 600px;
 }
 
 .nn-card h3 {
@@ -434,4 +438,381 @@
   .option-row select {
     width: 100%;
   }
+}
+
+/* Neural Network Architecture Visualization */
+.nn-architecture-card {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.collapsible-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+  width: 100%;
+}
+
+.collapsible-header h3 {
+  margin: 0;
+}
+
+.architecture-content {
+  margin-top: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.architecture-layout {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.layer-visualization {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 200px;
+  max-width: 350px;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-items: center;
+  padding: 25px 20px;
+  background-color: var(--accent-color-light);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  position: relative;
+  width: 100%;
+}
+
+/* Layer connections - adjusted for scrolling container */
+.layer-visualization::before {
+  display: none; /* Remove the vertical line */
+}
+
+.layer-configuration {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+  padding-left: 15px;
+  position: relative;
+}
+
+.layer-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.layer-title-section h4 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.layer-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  min-width: 250px;
+  max-width: 400px;
+}
+
+.layer-config-form {
+  background-color: var(--accent-color-light);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.layer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.layer-header h5 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.layer-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+  z-index: 3;
+}
+
+.layer-button {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.edit-layer {
+  color: var(--primary-color);
+}
+
+.edit-layer:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+  color: var(--primary-color);
+}
+
+.remove-layer {
+  color: var(--text-color);
+}
+
+.remove-layer:hover {
+  color: #ff4d4d;
+  background-color: rgba(255, 77, 77, 0.1);
+}
+
+.convert-layer {
+  color: var(--text-color);
+}
+
+.convert-layer:hover {
+  color: #ffa500;
+  background-color: rgba(255, 165, 0, 0.1);
+}
+
+.layer-box {
+  width: 90%;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 10px;
+}
+
+.layer-title {
+  font-weight: bold;
+  margin-bottom: 2px;
+  color: var(--primary-color);
+}
+
+.layer-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+  line-height: 1.2;
+  text-align: center;
+  width: 100%;
+}
+
+.layer-info span {
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.neurons-visual {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  margin: 3px 0;
+  max-width: 220px;
+  white-space: nowrap;
+  min-height: 20px;
+  overflow: visible;
+}
+
+.neuron {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  margin: 0 1px;
+}
+
+.input-layer .neuron,
+.output-layer .neuron {
+  background-color: var(--secondary-color);
+}
+
+.neuron-dots {
+  font-size: 0.8rem;
+  background-color: rgba(0, 123, 255, 0.1);
+  padding: 2px 5px;
+  border-radius: 10px;
+  margin-left: 4px;
+  color: var(--primary-color);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.add-layer-button {
+  margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.add-layer-button button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  background-color: var(--primary-color);
+}
+
+.layer-control-item {
+  background-color: var(--accent-color-light);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  flex: 1;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.input-group input,
+.input-group select {
+  flex: 2;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.other-architecture-params {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.other-architecture-params h4 {
+  margin: 0 0 15px 0;
+  color: var(--primary-color);
+  text-align: center;
+  width: 100%;
+}
+
+.other-architecture-params .input-group {
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Layers counter */
+.layers-counter {
+  margin-top: 5px;
+  text-align: left;
+  font-weight: 500;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  padding-left: 0;
+  margin-left: 0;
+  width: 100%;
+  display: block;
+}
+
+/* Responsive adjustments for architecture visualization */
+@media (max-width: 800px) {
+  .architecture-layout {
+    flex-direction: column;
+  }
+
+  .layer-controls {
+    order: -1; /* Move controls above visualization on mobile */
+    max-width: 100%;
+  }
+
+  .layer-visualization {
+    max-width: 100%;
+  }
+}
+
+.training-params-content {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.save-button {
+  background-color: var(--secondary-color) !important;
+}
+
+.cancel-button {
+  background-color: #888 !important;
+}
+
+.layer-visualization .layer-box {
+  padding-top: 25px;
+}
+
+/* Make scrollbar thinner and more subtle */
+.layer-visualization::-webkit-scrollbar {
+  width: 6px;
+}
+
+.layer-visualization::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.layer-visualization::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.layer-visualization::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
