@@ -152,3 +152,60 @@ label {
     margin-bottom: 10px;
   }
 }
+
+/* File type toggle styles */
+.file-type-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 120px;
+  padding: 10px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--card-bg-color);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9em;
+  min-width: 100px;
+}
+
+.toggle-btn:hover {
+  background-color: #fff;
+  color: var(--button-hover-border-color);
+  border-color: var(--primary-color);
+}
+
+.toggle-btn.active {
+  background-color: var(--secondary-color);
+  color: white;
+  border-color: var(--secondary-color);
+}
+
+.toggle-btn.active:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Dataset info styles */
+.dataset-info {
+  margin: 15px 0;
+  padding: 10px 15px;
+  background-color: #f0f8ff;
+  border: 1px solid #d0e0f0;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.dataset-info p {
+  margin: 5px 0;
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaUpload, FaSpinner } from "react-icons/fa";
+import { FaUpload, FaSpinner, FaFileAlt, FaImage } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./FileSelectionStyles.css";
 
@@ -13,6 +13,8 @@ function FileSelection({
 }) {
   const [separator, setSeparator] = useState(",");
   const [availableFiles, setAvailableFiles] = useState([]);
+  const [csvFiles, setCsvFiles] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   // Separate loading states for load/upload and delete operations
@@ -21,19 +23,44 @@ function FileSelection({
   // fileSource indicates whether the file was chosen from the combo ("combo")
   // or from the file system ("system")
   const [fileSource, setFileSource] = useState("");
+  // Toggle between CSV and image mode
+  const [fileType, setFileType] = useState("csv");
+  // For preview of image data
+  const [imagePreview, setImagePreview] = useState(null);
   const url = import.meta.env.VITE_BASE_URL;
 
   const fetchFiles = () => {
     fetch(`${url}/data/files`)
       .then((res) => res.json())
       .then((data) => {
-        setAvailableFiles(data.files);
+        // Store all files but separate them by type
+        const allFiles = data.files || [];
+        const csvFilesArray = allFiles.filter((file) =>
+          file.toLowerCase().endsWith(".csv")
+        );
+        const imageFilesArray = allFiles.filter(
+          (file) => !file.toLowerCase().endsWith(".csv")
+        );
+
+        setCsvFiles(csvFilesArray);
+        setImageFiles(imageFilesArray);
+
+        // Set the appropriate files based on current mode
+        setAvailableFiles(fileType === "csv" ? csvFilesArray : imageFilesArray);
+
         sessionStorage.setItem("availableFiles", JSON.stringify(data.files));
+        sessionStorage.setItem("csvFiles", JSON.stringify(csvFilesArray));
+        sessionStorage.setItem("imageFiles", JSON.stringify(imageFilesArray));
       })
       .catch((err) => console.error(err));
   };
 
   useEffect(() => {
+    const storedFileType = sessionStorage.getItem("fileType");
+    if (storedFileType) {
+      setFileType(storedFileType);
+    }
+
     fetchFiles();
     const storedSelected = sessionStorage.getItem("selectedFileName");
     if (storedSelected) {
@@ -41,6 +68,13 @@ function FileSelection({
       setFileSource("combo");
     }
   }, []);
+
+  // Update available files when file type changes
+  useEffect(() => {
+    // Set the appropriate files based on current mode
+    setAvailableFiles(fileType === "csv" ? csvFiles : imageFiles);
+    sessionStorage.setItem("fileType", fileType);
+  }, [fileType, csvFiles, imageFiles]);
 
   const handleComboChange = (e) => {
     const filename = e.target.value;
@@ -51,51 +85,93 @@ function FileSelection({
     if (!filename) {
       setFilePreview([]);
       setSelectedFile(null);
+      setImagePreview(null);
+      return;
+    }
+
+    // If MNIST dataset is selected
+    if (filename === "mnist" && fileType === "image") {
+      setSelectedFile({ name: "mnist" });
+      fetch(`${url}/data/mnist_preview`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.image) {
+            setImagePreview(data.image);
+          }
+          setFilePreview([]);
+        })
+        .catch((err) => console.error(err));
       return;
     }
 
     fetch(`${url}/data/select`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename }),
+      body: JSON.stringify({ filename, type: fileType }),
     })
       .then((res) => res.json())
       .then((data) => {
-        setFilePreview(data.preview);
+        if (fileType === "csv") {
+          setFilePreview(data.preview);
+          setImagePreview(null);
+        } else if (fileType === "image" && data.image) {
+          setImagePreview(data.image);
+          setFilePreview([]);
+        }
         setSelectedFile({ name: filename });
       })
       .catch((err) => console.error(err));
   };
 
   const handleClick = () => {
-    document.getElementById("fileInput").click();
+    const fileInput = document.getElementById("fileInput");
+    fileInput.accept = fileType === "csv" ? ".csv" : "image/*";
+    fileInput.click();
   };
 
   // When a file is selected from the system
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      if (!file.name.toLowerCase().endsWith(".csv")) {
-        alert("Only CSV files allowed");
+
+      if (fileType === "csv" && !file.name.toLowerCase().endsWith(".csv")) {
+        alert("Only CSV files allowed in CSV mode");
         return;
       }
+
+      if (fileType === "image" && !file.type.startsWith("image/")) {
+        alert("Only image files allowed in Image mode");
+        return;
+      }
+
       // Clear previous combo selection
       setSelectedFileName("");
       sessionStorage.removeItem("selectedFileName");
       setFilePreview([]);
+      setImagePreview(null);
       setSelectedFile(null);
       // Mark file source as system
       setFileSource("system");
 
       // Set preview locally without uploading yet
       setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const fileContent = evt.target.result;
-        const lines = fileContent.split(/\r?\n/);
-        setFilePreview(lines.slice(0, 10));
-      };
-      reader.readAsText(file);
+
+      if (fileType === "csv") {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const fileContent = evt.target.result;
+          const lines = fileContent.split(/\r?\n/);
+          setFilePreview(lines.slice(0, 10));
+        };
+        reader.readAsText(file);
+      } else {
+        // Preview image
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          setImagePreview(evt.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -111,7 +187,8 @@ function FileSelection({
     if (fileSource === "system") {
       const formData = new FormData();
       formData.append("file", selectedFile);
-      
+      formData.append("type", fileType);
+
       fetch(`${url}/data/upload`, {
         method: "POST",
         body: formData,
@@ -138,6 +215,7 @@ function FileSelection({
           filename: selectedFile.name,
           has_header: hasHeader,
           separator,
+          type: fileType,
         }),
       })
         .then((res) => res.json())
@@ -160,15 +238,17 @@ function FileSelection({
       alert("No file selected");
       return;
     }
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${selectedFileName}?`);
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${selectedFileName}?`
+    );
     if (!confirmDelete) return;
-  
+
     setIsDeleteLoading(true);
-  
+
     fetch(`${url}/data/delete`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: selectedFileName }),
+      body: JSON.stringify({ filename: selectedFileName, type: fileType }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -177,6 +257,7 @@ function FileSelection({
         setSelectedFileName("");
         setSelectedFile(null);
         setFilePreview([]);
+        setImagePreview(null);
         fetchFiles();
       })
       .catch((err) => {
@@ -204,14 +285,39 @@ function FileSelection({
     }
   };
 
+  const toggleFileType = (type) => {
+    setFileType(type);
+    // Reset selection when toggling file type
+    setSelectedFileName("");
+    setSelectedFile(null);
+    setFilePreview([]);
+    setImagePreview(null);
+  };
+
   return (
     <div className="file-selection-container">
       <div className="file-selection">
         <h2>File Selection</h2>
         <p>Select your dataset</p>
+
+        {/* Toggle between CSV and Image */}
+        <div className="file-type-toggle">
+          <button
+            className={`toggle-btn ${fileType === "csv" ? "active" : ""}`}
+            onClick={() => toggleFileType("csv")}
+          >
+            <FaFileAlt /> CSV
+          </button>
+          <button
+            className={`toggle-btn ${fileType === "image" ? "active" : ""}`}
+            onClick={() => toggleFileType("image")}
+          >
+            <FaImage /> Images
+          </button>
+        </div>
+
         <input
           type="file"
-          accept=".csv"
           id="fileInput"
           style={{ display: "none" }}
           onChange={handleFileChange}
@@ -219,6 +325,9 @@ function FileSelection({
         <div className="file-selection-controls">
           <select value={selectedFileName} onChange={handleComboChange}>
             <option value="">Select a file</option>
+            {fileType === "image" && (
+              <option value="mnist">MNIST Dataset</option>
+            )}
             {availableFiles.map((file) => (
               <option key={file} value={file}>
                 {file}
@@ -234,31 +343,38 @@ function FileSelection({
             <FaUpload />
           </button>
         </div>
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              checked={hasHeader}
-              onChange={() => setHasHeader(!hasHeader)}
-            />
-            File has header
-          </label>
-        </div>
-        <div>
-          <label>
-            Separator:
-            <select
-              value={separator}
-              onChange={(e) => setSeparator(e.target.value)}
-            >
-              <option value=",">Comma (,)</option>
-              <option value=";">Semicolon (;)</option>
-              <option value=":">Colon (:)</option>
-              <option value="\t">Tab</option>
-              <option value=" ">Space</option>
-            </select>
-          </label>
-        </div>
+
+        {/* Only show header and separator options for CSV */}
+        {fileType === "csv" && (
+          <>
+            <div>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={hasHeader}
+                  onChange={() => setHasHeader(!hasHeader)}
+                />
+                File has header
+              </label>
+            </div>
+            <div>
+              <label>
+                Separator:
+                <select
+                  value={separator}
+                  onChange={(e) => setSeparator(e.target.value)}
+                >
+                  <option value=",">Comma (,)</option>
+                  <option value=";">Semicolon (;)</option>
+                  <option value=":">Colon (:)</option>
+                  <option value="\t">Tab</option>
+                  <option value=" ">Space</option>
+                </select>
+              </label>
+            </div>
+          </>
+        )}
+
         {selectedFile && <p>Selected file: {selectedFile.name}</p>}
         <div className="file-selection-actions">
           <button
@@ -271,14 +387,21 @@ function FileSelection({
                 <FaSpinner className="loadingIcon" />{" "}
                 {fileSource === "system" ? "Uploading..." : "Loading..."}
               </>
+            ) : fileSource === "system" ? (
+              "Upload File"
             ) : (
-              fileSource === "system" ? "Upload File" : "Load File"
+              "Load File"
             )}
           </button>
           <button
             type="button"
             onClick={handleDeleteFile}
-            disabled={isDeleteLoading || isLoadFileLoading || !selectedFileName}
+            disabled={
+              isDeleteLoading ||
+              isLoadFileLoading ||
+              !selectedFileName ||
+              selectedFileName === "mnist"
+            }
           >
             {isDeleteLoading ? (
               <>
@@ -290,7 +413,8 @@ function FileSelection({
           </button>
         </div>
       </div>
-      {selectedFile && filePreview.length > 0 && (
+      {/* Show appropriate preview based on file type */}
+      {selectedFile && filePreview.length > 0 && fileType === "csv" && (
         <div className="file-preview">
           <h3>Preview (first 10 rows):</h3>
           <div className="table-container">
@@ -315,6 +439,16 @@ function FileSelection({
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Image preview for image mode */}
+      {imagePreview && fileType === "image" && (
+        <div className="image-preview">
+          <h3>Image Preview:</h3>
+          <div className="image-container">
+            <img src={imagePreview} alt="Dataset preview" />
           </div>
         </div>
       )}
