@@ -31,6 +31,10 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   width: 45%;
   min-width: 300px;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tunning-sections {
@@ -59,18 +63,26 @@
   width: 100%;
   border-collapse: collapse;
   margin: 0 auto;
+  margin-bottom: 20px;
+  table-layout: fixed;
 }
 
 .nn-card td {
-  padding: 8px 0;
+  padding: 8px;
   font-size: 14px;
   border: 1px solid var(--border-color);
-  padding: 8px;
+  vertical-align: middle;
 }
 
 .nn-card td:first-child {
   width: 40%;
   color: var(--text-color);
+  text-align: left;
+}
+
+.nn-card td:last-child {
+  width: 60%;
+  text-align: center;
 }
 
 .nn-card input[type="number"],
@@ -82,6 +94,7 @@
   border-radius: 4px;
   background-color: var(--input-bg);
   color: var(--text-color);
+  box-sizing: border-box;
 }
 
 /* Selected parameters display */
@@ -93,6 +106,7 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 700px;
+  border: 1px solid #ccc;
 }
 
 .nn-params-summary {
@@ -158,6 +172,7 @@
   flex: 1;
   min-width: 300px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
 }
 
 .options-group h3 {
@@ -254,6 +269,7 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 800px;
+  border: 1px solid #ccc;
 }
 
 .metrics-grid {
@@ -268,6 +284,7 @@
   border-radius: 6px;
   padding: 15px;
   text-align: center;
+  border: 1px solid #ccc;
 }
 
 .metric-card h4 {
@@ -307,6 +324,7 @@
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
+  border: 1px solid #ccc;
 }
 
 .result-image:hover {
