@@ -2,17 +2,32 @@
   border: 1px solid black;
 } */
 
+.tunning-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.tunning-container h2,
+.tunning-container p {
+  text-align: center;
+}
+
 .tunning-container .radio-group {
   margin-bottom: 20px;
   display: flex;
   justify-content: center;
+  gap: 20px;
 }
 
 .tunning-container .mode-button {
   border: 1px solid #ccc;
   background-color: var(--background-color);
   color: var(--text-color);
-  margin: 0 10px;
+  margin: 0;
   width: 140px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -35,82 +50,137 @@
 
 .tunning-container .tunning-sections {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
 }
 
 .tunning-container .card {
   border: 1px solid #ccc;
   border-radius: 8px;
-  padding: 0px 20px 20px 20px;
-  margin: 10px;
+  padding: 20px;
   background-color: var(--card-bg-color);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 48%;
+  width: 45%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tunning-container table {
-  width: 90%;
+  width: 100%;
   border-collapse: collapse;
   margin: 0 auto;
   margin-bottom: 20px;
+  table-layout: fixed;
 }
 
 .tunning-container td {
   padding: 8px 10px;
   border: 1px solid #ccc;
+  overflow: hidden;
+}
+
+.tunning-container td:first-child {
+  width: 40%;
+}
+
+.tunning-container td:last-child {
+  width: 60%;
 }
 
 .tunning-container input[type="number"] {
-  width: 80%;
-  padding: 6px;
+  width: 95%;
+  padding: 8px;
   background-color: var(--background-color);
   color: var(--text-color);
   border: 1px solid #ccc;
   border-radius: 4px;
+  box-sizing: border-box;
 }
 
-@media (max-width: 880px) {
-  .tunning-container {
-    margin-top: 70px;
-  }
+.tunning-container .card button {
+  margin-top: 15px;
+  padding: 8px 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+  width: 80%;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tunning-container .card button:hover {
+  background-color: var(--secondary-color);
+}
+
+.tunning-container .card button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.tunning-container .button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 15px;
+}
+
+.tunning-container button {
+  min-width: 120px;
 }
 
 @media (max-width: 800px) {
   .tunning-container .tunning-sections {
     flex-direction: column;
     align-items: center;
-    justify-content: center;
   }
 
   .tunning-container .card {
-    width: 400px;
+    width: 100%;
+    max-width: 500px;
   }
 }
 
 @media (max-width: 600px) {
-  .tunning-container {
-    margin-top: 50px;
+  .tunning-container .radio-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tunning-container .mode-button {
+    width: 200px;
+  }
+
+  .tunning-container .button-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tunning-container button {
+    width: 100%;
   }
 }
 
-@media (max-width: 400px) {
-  .tunning-container .card {
-    width: 90%;
-    /* margin: 0; */
-  }
+.loadingIcon {
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
 
-  .tunning-container table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
-
-  .tunning-container input[type="number"] {
-    width: 60%;
-    padding: 6px;
-    border: 1px solid var(--button-bg-color);
-    border-radius: 4px;
-    background-color: var(--background-color);
-    color: var(--text-color);
+  to {
+    transform: rotate(360deg);
   }
 }

@@ -12,17 +12,17 @@ function Tunning({
   setMode,
 }) {
   const [toastMessage, setToastMessage] = useState("");
-  const [gridSearchLoading, setGridSearchLoading] = useState(false);
   const [paramsLoading, setParamsLoading] = useState(false);
+  const [gridSearchLoading, setGridSearchLoading] = useState(false);
   const url = import.meta.env.VITE_BASE_URL;
 
   // On mount, restore loading states from sessionStorage
   useEffect(() => {
-    if (sessionStorage.getItem("gridSearchLoading") === "true") {
-      setGridSearchLoading(true);
-    }
     if (sessionStorage.getItem("paramsLoading") === "true") {
       setParamsLoading(true);
+    }
+    if (sessionStorage.getItem("gridSearchLoading") === "true") {
+      setGridSearchLoading(true);
     }
   }, []);
 

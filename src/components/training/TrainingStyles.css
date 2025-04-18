@@ -2,19 +2,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.training-container h2,
+.training-container p {
+  text-align: center;
 }
 
 .training-methods {
   display: flex;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  gap: 20px;
 }
 
 .method-button {
   border: 1px solid #ccc;
   background-color: var(--background-color);
   color: var(--text-color);
-  margin: 0 5px;
+  margin: 0;
   width: 160px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -36,23 +45,33 @@
   color: white;
 }
 
+.split-ratio,
+.num-folds,
+.rounds-input,
+.distribution-config {
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
 .split-ratio label,
 .num-folds label,
-.distribution-config label {
-  display: block;
+.distribution-config label,
+.rounds-input label {
+  display: inline-block;
   margin-bottom: 10px;
 }
 
 .split-ratio input,
 .num-folds input,
 .distribution-config input,
-.rounds-input input{
-  width: 50px;
+.rounds-input input {
+  width: 80px;
   padding: 8px;
   margin-left: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  
 }
 
 .distribution-config select {
@@ -60,12 +79,15 @@
   margin-left: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  
+  min-width: 150px;
 }
 
 .distribution-config table {
   border-collapse: collapse;
-  width: 320px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  margin-top: 15px;
 }
 
 .distribution-config td {
@@ -73,20 +95,38 @@
   border: 1px solid #ccc;
 }
 
+.distribution-config td:first-child {
+  width: 40%;
+  text-align: right;
+}
+
 .distribution-config input {
-  width: 70%;
+  width: 100%;
   margin-left: 0;
+}
+
+.selected-params {
+  margin-bottom: 20px;
+  text-align: center;
+  width: 100%;
 }
 
 .selected-params h3 {
   background-color: var(--button-bg-color);
   color: var(--button-text-color);
   padding: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   margin-top: 0px;
   border-radius: 8px;
-  width: 300px;
+  max-width: 400px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 0 auto 20px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .train-button {
@@ -96,7 +136,9 @@
   background-color: var(--button-bg-color);
   color: var(--button-text-color);
   cursor: pointer;
-  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .train-button:hover {
@@ -105,36 +147,49 @@
 
 .loadingIcon {
   animation: spin 1s linear infinite;
-  margin-right: 5px;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-@media (max-width: 880px) {
-  .training-container {
-    margin-top: 70px;
+@media (max-width: 800px) {
+  .distribution-config table {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 600px) {
-  .training-container {
-    margin-top: 50px;
+  .training-methods {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
   }
-}
 
-@media (max-width: 400px) {
   .method-button {
-    margin: 0 5px;
-    width: 140px;
-    font-size: small;
+    width: 100%;
   }
 
-  .selected-params h3 {
-    padding: 6px;
-    width: 250px;
-    font-size: medium;
+  .split-ratio label,
+  .num-folds label,
+  .distribution-config label,
+  .rounds-input label {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .distribution-config select {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .distribution-config td:first-child {
+    text-align: left;
   }
 }

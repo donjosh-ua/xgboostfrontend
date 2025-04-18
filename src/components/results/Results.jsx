@@ -3,7 +3,7 @@ import { FaSpinner } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./ResultsStyles.css";
 
-function Results() {
+function Results({ modelType = "xgboost" }) {
   const [toastMessage, setToastMessage] = useState("");
   const [isTesting, setIsTesting] = useState(false);
   const [resultsImages, setResultsImages] = useState({});

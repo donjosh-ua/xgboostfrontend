@@ -15,6 +15,12 @@
   --primary-color: #ff5e0e;
   --secondary-color: #008575;
   --card-bg-color: #ffffff;
+  --primary-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --accent-color-light: #fff2eb;
+  --primary-color-dark: #e84e00;
+  --disabled-color: #cccccc;
+  --input-bg: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -29,6 +35,20 @@
   --button-text-color: #1a1a1a;
   --button-hover-border-color: #ff5e0e;
   --card-bg-color: #1a1a1a;
+  --primary-bg: #1a1a1a;
+  --border-color: #444444;
+  --accent-color-light: #3a2e28;
+  --primary-color-dark: #e84e00;
+  --disabled-color: #666666;
+  --input-bg: #333333;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 a {
@@ -36,11 +56,9 @@ a {
 }
 
 body {
-  margin-top: 50px;
-  padding: 20px;
-  place-items: center;
+  margin: 0;
+  padding: 0;
   min-width: 320px;
-  /* min-height: 100vh; */
   background-color: var(--background-color);
   color: var(--text-color);
 }
@@ -71,7 +89,8 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-input[type="number"], select {
+input[type="number"],
+select {
   border: 1px solid var(--button-bg-color);
   border-radius: 4px;
   background-color: var(--background-color);
