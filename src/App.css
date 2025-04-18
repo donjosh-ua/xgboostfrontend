@@ -303,12 +303,6 @@ table {
     justify-content: center;
     gap: 10px;
   }
-
-  header button {
-    width: auto;
-    padding: 8px 12px;
-    margin: 0 5px;
-  }
 }
 
 @media (max-width: 600px) {
@@ -317,7 +311,7 @@ table {
   }
 
   .model-toggle-button {
-    width: 100%;
+    width: 90%;
   }
 
   header ul {
@@ -325,8 +319,7 @@ table {
   }
 
   header button {
-    margin: 5px;
-    padding: 6px 10px;
+    margin: 0 5px;
     font-size: 0.9rem;
   }
 

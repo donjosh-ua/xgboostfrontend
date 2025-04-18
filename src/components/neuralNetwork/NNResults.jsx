@@ -77,7 +77,7 @@ function NNResults({ selectedFile, modelType }) {
 
   return (
     <div className="nn-results-container">
-      <h2>Neural Network Testing</h2>
+      <h2>Testing</h2>
       <p>Test your neural network model against the dataset</p>
 
       <button

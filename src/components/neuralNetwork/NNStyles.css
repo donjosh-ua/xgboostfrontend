@@ -17,7 +17,7 @@
 .nn-tunning-container p,
 .nn-training-container p,
 .nn-results-container p {
-  color: var(--primary-color);
+  color: var(--text-color);
   margin-bottom: 5px;
   text-align: center;
 }
@@ -48,7 +48,7 @@
 }
 
 .nn-card h3 {
-  color: var(--primary-color);
+  color: var(--text-color);
   margin-top: 0;
   margin-bottom: 15px;
   font-size: 1.2rem;
@@ -161,7 +161,7 @@
 }
 
 .options-group h3 {
-  color: var(--primary-color);
+  color: var(--text-color);
   margin-top: 0;
   margin-bottom: 15px;
   font-size: 1rem;

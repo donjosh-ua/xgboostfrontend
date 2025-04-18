@@ -91,7 +91,7 @@ function NNTraining({
 
   return (
     <div className="nn-training-container">
-      <h2>Neural Network Training</h2>
+      <h2>Training</h2>
       <p>
         Train your neural network by splitting data or using cross-validation
       </p>
