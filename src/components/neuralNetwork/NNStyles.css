@@ -71,6 +71,18 @@
   table-layout: fixed;
 }
 
+/* Specific styles for the training parameters table */
+.nn-card:not(.nn-architecture-card) table {
+  max-width: 450px; /* Make the table narrower */
+}
+
+/* Table container for better centering */
+.table-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .nn-card td {
   padding: 8px;
   font-size: 14px;

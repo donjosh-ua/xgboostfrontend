@@ -685,39 +685,49 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
         <div className="nn-card">
           <h3>Training Parameters</h3>
-          <div className="training-params-content">
-            <div className="input-group">
-              <label>Learning Rate:</label>
-              <input
-                type="number"
-                name="learning_rate"
-                value={nnParams.learning_rate}
-                onChange={handleInputChange}
-                min="0.0001"
-                max="1"
-                step="0.001"
-              />
-            </div>
-            <div className="input-group">
-              <label>Batch Size:</label>
-              <input
-                type="number"
-                name="batch_size"
-                value={nnParams.batch_size}
-                onChange={handleInputChange}
-                min="1"
-              />
-            </div>
-            <div className="input-group">
-              <label>Epochs:</label>
-              <input
-                type="number"
-                name="epochs"
-                value={nnParams.epochs}
-                onChange={handleInputChange}
-                min="1"
-              />
-            </div>
+          <div className="table-container">
+            <table>
+              <tbody>
+                <tr>
+                  <td>Learning Rate:</td>
+                  <td>
+                    <input
+                      type="number"
+                      name="learning_rate"
+                      value={nnParams.learning_rate}
+                      onChange={handleInputChange}
+                      min="0.0001"
+                      max="1"
+                      step="0.001"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Batch Size:</td>
+                  <td>
+                    <input
+                      type="number"
+                      name="batch_size"
+                      value={nnParams.batch_size}
+                      onChange={handleInputChange}
+                      min="1"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Epochs:</td>
+                  <td>
+                    <input
+                      type="number"
+                      name="epochs"
+                      value={nnParams.epochs}
+                      onChange={handleInputChange}
+                      min="1"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
