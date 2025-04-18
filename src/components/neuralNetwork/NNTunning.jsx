@@ -297,10 +297,29 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       ...nnParams,
       hidden_layers: Number(nnParams.hidden_layers),
       neurons_per_layer: Number(nnParams.neurons_per_layer),
-      learning_rate: Number(nnParams.learning_rate),
-      batch_size: Number(nnParams.batch_size),
-      epochs: Number(nnParams.epochs),
-      dropout_rate: Number(nnParams.dropout_rate),
+      learning_rate: Number(nnParams.learning_rate || 0.01),
+      batch_size: Number(nnParams.batch_size || 64),
+      epochs: Number(nnParams.epochs || 20),
+      dropout_rate: Number(nnParams.dropout_rate || 0.2),
+      alpha: Number(nnParams.alpha || 0.001),
+      decay: Number(nnParams.decay || 0.0),
+      momentum: Number(nnParams.momentum || 0.9),
+      test_size: Number(nnParams.test_size || 0.2),
+      Kfold: Number(nnParams.Kfold || 5),
+      cv: Boolean(nnParams.cv),
+      Bay: Boolean(nnParams.Bay),
+      pred_hot: Boolean(
+        nnParams.pred_hot === undefined ? true : nnParams.pred_hot
+      ),
+      verbose: Boolean(
+        nnParams.verbose === undefined ? true : nnParams.verbose
+      ),
+      criteria: nnParams.criteria || "cross_entropy",
+      optimizer: nnParams.optimizer || "SGD",
+      save_mod: nnParams.save_mod || "ModiR",
+      image: Boolean(nnParams.image),
+      FA_ext: nnParams.FA_ext,
+      image_size: nnParams.image_size,
       layers: layers.map((layer) => ({
         neurons: Number(layer.neurons),
         input_neurons: Number(layer.input_neurons),
@@ -391,7 +410,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
   return (
     <div className="nn-tunning-container">
       <h2>Parameters</h2>
-      <p>
+      <p className="tunning-description">
         Configure the architecture and hyperparameters for your neural network
       </p>
 
@@ -689,28 +708,15 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
             <table>
               <tbody>
                 <tr>
-                  <td>Learning Rate:</td>
+                  <td>Alpha:</td>
                   <td>
                     <input
                       type="number"
-                      name="learning_rate"
-                      value={nnParams.learning_rate}
+                      name="alpha"
+                      value={nnParams.alpha || "0.001"}
                       onChange={handleInputChange}
-                      min="0.0001"
-                      max="1"
+                      min="0"
                       step="0.001"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Batch Size:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="batch_size"
-                      value={nnParams.batch_size}
-                      onChange={handleInputChange}
-                      min="1"
                     />
                   </td>
                 </tr>
@@ -720,10 +726,219 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
                     <input
                       type="number"
                       name="epochs"
-                      value={nnParams.epochs}
+                      value={nnParams.epochs || "20"}
                       onChange={handleInputChange}
                       min="1"
                     />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Loss Function:</td>
+                  <td>
+                    <select
+                      name="criteria"
+                      value={nnParams.criteria || "cross_entropy"}
+                      onChange={handleInputChange}
+                    >
+                      <option value="cross_entropy">Cross Entropy</option>
+                      <option value="mse">MSE</option>
+                      <option value="binary_crossentropy">
+                        Binary Cross Entropy
+                      </option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Optimizer:</td>
+                  <td>
+                    <select
+                      name="optimizer"
+                      value={nnParams.optimizer || "SGD"}
+                      onChange={handleInputChange}
+                    >
+                      <option value="SGD">SGD</option>
+                      <option value="Adam">Adam</option>
+                      <option value="RMSprop">RMSprop</option>
+                      <option value="Adagrad">Adagrad</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Weight Decay:</td>
+                  <td>
+                    <input
+                      type="number"
+                      name="decay"
+                      value={nnParams.decay || "0.0"}
+                      onChange={handleInputChange}
+                      min="0"
+                      step="0.001"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Momentum:</td>
+                  <td>
+                    <input
+                      type="number"
+                      name="momentum"
+                      value={nnParams.momentum || "0.9"}
+                      onChange={handleInputChange}
+                      min="0"
+                      max="1"
+                      step="0.1"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Batch Size:</td>
+                  <td>
+                    <input
+                      type="number"
+                      name="batch_size"
+                      value={nnParams.batch_size || "64"}
+                      onChange={handleInputChange}
+                      min="1"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Test Split Size:</td>
+                  <td>
+                    <input
+                      type="number"
+                      name="test_size"
+                      value={nnParams.test_size || "0.2"}
+                      onChange={handleInputChange}
+                      min="0.1"
+                      max="0.5"
+                      step="0.1"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Cross Validation:</td>
+                  <td>
+                    <select
+                      name="cv"
+                      value={nnParams.cv ? "true" : "false"}
+                      onChange={(e) =>
+                        handleInputChange({
+                          target: {
+                            name: "cv",
+                            value: e.target.value === "true",
+                          },
+                        })
+                      }
+                    >
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>K-Fold CV:</td>
+                  <td>
+                    <input
+                      type="number"
+                      name="Kfold"
+                      value={nnParams.Kfold || "5"}
+                      onChange={handleInputChange}
+                      min="2"
+                      max="10"
+                      step="1"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Bayesian Opt:</td>
+                  <td>
+                    <select
+                      name="Bay"
+                      value={nnParams.Bay ? "true" : "false"}
+                      onChange={(e) =>
+                        handleInputChange({
+                          target: {
+                            name: "Bay",
+                            value: e.target.value === "true",
+                          },
+                        })
+                      }
+                    >
+                      <option value="false">No</option>
+                      <option value="true">Yes</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>One-Hot Prediction:</td>
+                  <td>
+                    <select
+                      name="pred_hot"
+                      value={nnParams.pred_hot ? "true" : "false"}
+                      onChange={(e) =>
+                        handleInputChange({
+                          target: {
+                            name: "pred_hot",
+                            value: e.target.value === "true",
+                          },
+                        })
+                      }
+                    >
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Verbose Output:</td>
+                  <td>
+                    <select
+                      name="verbose"
+                      value={nnParams.verbose ? "true" : "false"}
+                      onChange={(e) =>
+                        handleInputChange({
+                          target: {
+                            name: "verbose",
+                            value: e.target.value === "true",
+                          },
+                        })
+                      }
+                    >
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Save Model Name:</td>
+                  <td>
+                    <input
+                      type="text"
+                      name="save_mod"
+                      value={nnParams.save_mod || "ModiR"}
+                      onChange={handleInputChange}
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Process Images:</td>
+                  <td>
+                    <select
+                      name="image"
+                      value={nnParams.image ? "true" : "false"}
+                      onChange={(e) =>
+                        handleInputChange({
+                          target: {
+                            name: "image",
+                            value: e.target.value === "true",
+                          },
+                        })
+                      }
+                    >
+                      <option value="false">No</option>
+                      <option value="true">Yes</option>
+                    </select>
                   </td>
                 </tr>
               </tbody>
