@@ -682,22 +682,6 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
                   </p>
                 </div>
               </div>
-
-              <div className="other-architecture-params">
-                <h4>Additional Parameters</h4>
-                <div className="input-group">
-                  <label>Dropout Rate:</label>
-                  <input
-                    type="number"
-                    name="dropout_rate"
-                    value={nnParams.dropout_rate}
-                    onChange={handleInputChange}
-                    min="0"
-                    max="0.9"
-                    step="0.1"
-                  />
-                </div>
-              </div>
             </div>
           )}
         </div>
