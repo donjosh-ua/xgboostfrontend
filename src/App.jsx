@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { FaNetworkWired, FaTree } from "react-icons/fa";
+import { useState, useEffect } from "react";
 import FileSelection from "./components/fileSelection/FileSelection";
 import Tunning from "./components/tunning/Tunning";
 import Training from "./components/training/Training";
@@ -7,6 +6,7 @@ import Results from "./components/results/Results";
 import NNTunning from "./components/neuralNetwork/NNTunning";
 import NNTraining from "./components/neuralNetwork/NNTraining";
 import NNResults from "./components/neuralNetwork/NNResults";
+import ModelToggle from "./components/ModelToggle";
 import "./App.css";
 
 function App() {
@@ -67,8 +67,16 @@ function App() {
     metrics: ["accuracy"],
   });
 
+  // Track model changes
+  useEffect(() => {
+    console.log("Active model changed to:", activeModel);
+  }, [activeModel]);
+
   const toggleModel = () => {
-    setActiveModel(activeModel === "xgboost" ? "neuralnetwork" : "xgboost");
+    console.log("Toggling model from", activeModel);
+    const newModel = activeModel === "xgboost" ? "neuralnetwork" : "xgboost";
+    setActiveModel(newModel);
+    console.log("New model should be:", newModel);
   };
 
   return (
@@ -76,17 +84,7 @@ function App() {
       {/* Main Content */}
       <div className="main-content">
         <header>
-          <button className="model-toggle-button" onClick={toggleModel}>
-            {activeModel === "xgboost" ? (
-              <>
-                <FaTree className="model-icon" /> XGBoost
-              </>
-            ) : (
-              <>
-                <FaNetworkWired className="model-icon" /> Neural Network
-              </>
-            )}
-          </button>
+          <ModelToggle activeModel={activeModel} toggleModel={toggleModel} />
 
           <nav>
             <ul>

@@ -13,6 +13,7 @@
   --button-text-color: #ffffff;
   --button-hover-border-color: #ff5e0e;
   --primary-color: #ff5e0e;
+  --primary-color-rgb: 255, 94, 14;
   --secondary-color: #008575;
   --card-bg-color: #ffffff;
   --primary-bg: #ffffff;
@@ -34,6 +35,8 @@
   --button-bg-color: #f9f9f9;
   --button-text-color: #1a1a1a;
   --button-hover-border-color: #ff5e0e;
+  --primary-color: #ff5e0e;
+  --primary-color-rgb: 255, 94, 14;
   --card-bg-color: #1a1a1a;
   --primary-bg: #1a1a1a;
   --border-color: #444444;
