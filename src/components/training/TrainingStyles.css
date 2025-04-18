@@ -5,12 +5,12 @@
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+  padding-top: 20px;
 }
 
 .training-container h2,
 .training-container p {
   text-align: center;
-  margin: 5px 0;
 }
 
 .training-methods {
