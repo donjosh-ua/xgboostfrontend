@@ -58,6 +58,27 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
   const handleInputLayerChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "neurons") {
+      // If changing output neurons of input layer, update input neurons of next layer
+      if (layers.length > 0) {
+        // Update the first hidden layer
+        const updatedLayers = [...layers];
+        updatedLayers[0] = {
+          ...updatedLayers[0],
+          input_neurons: value,
+        };
+        setLayers(updatedLayers);
+        updateNNParams(updatedLayers);
+      } else if (showOutputLayer) {
+        // Update output layer if no hidden layers
+        setOutputLayer((prev) => ({
+          ...prev,
+          input_neurons: value,
+        }));
+      }
+    }
+
     setInputLayer((prev) => ({
       ...prev,
       [name]: value,
@@ -66,6 +87,16 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
   const handleOutputLayerChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "input_neurons" && layers.length === 0) {
+      // If changing input neurons of output layer with no hidden layers,
+      // update output neurons of input layer to match
+      setInputLayer((prev) => ({
+        ...prev,
+        neurons: value,
+      }));
+    }
+
     setOutputLayer((prev) => ({
       ...prev,
       [name]: value,
@@ -110,6 +141,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         activation: "relu",
       });
     } else {
+      // Adding a hidden layer
       const inputNeurons =
         layers.length > 0
           ? layers[layers.length - 1].neurons
@@ -120,14 +152,17 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         input_neurons: inputNeurons,
       };
 
+      // Insert the new layer before the output layer
       const updatedLayers = [...layers, newLayer];
       setLayers(updatedLayers);
 
+      // Update output layer's input neurons to match the new layer's output
       setOutputLayer((prev) => ({
         ...prev,
         input_neurons: newLayer.neurons,
       }));
 
+      // Reset currentLayer for next addition
       setCurrentLayer({
         neurons: "10",
         input_neurons: newLayer.neurons, // Use current output as next input
@@ -175,17 +210,44 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     };
 
     if (editingIndex >= 0) {
+      // Editing a hidden layer
       const updatedLayers = [...layers];
+      const oldNeurons = updatedLayers[editingIndex].neurons;
       updatedLayers[editingIndex] = { ...validatedCurrentLayer };
       setLayers(updatedLayers);
 
+      // Ensure consistency with next layer (if any)
       if (editingIndex < layers.length - 1) {
+        // Update input_neurons of the next hidden layer
         updatedLayers[editingIndex + 1].input_neurons =
           validatedCurrentLayer.neurons;
       } else if (showOutputLayer) {
+        // Update input_neurons of output layer
         setOutputLayer((prev) => ({
           ...prev,
           input_neurons: validatedCurrentLayer.neurons,
+        }));
+      }
+
+      // Ensure consistency with previous layer (if any)
+      if (editingIndex > 0) {
+        // If input_neurons changed, check if it needs to be updated to match previous layer's output
+        if (
+          validatedCurrentLayer.input_neurons !==
+          layers[editingIndex].input_neurons
+        ) {
+          // Optionally update previous layer's neurons to match
+          // updatedLayers[editingIndex - 1].neurons = validatedCurrentLayer.input_neurons;
+        }
+      } else if (
+        showInputLayer &&
+        validatedCurrentLayer.input_neurons !==
+          layers[editingIndex].input_neurons
+      ) {
+        // Update input layer's output neurons if first hidden layer's input changed
+        setInputLayer((prev) => ({
+          ...prev,
+          neurons: validatedCurrentLayer.input_neurons,
         }));
       }
 
@@ -198,22 +260,26 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
       updateNNParams(updatedLayers);
     } else if (editInput) {
-      // Update input layer configuration with all properties
+      // Editing input layer
+      const oldNeurons = inputLayer.neurons;
       setInputLayer({ ...validatedCurrentLayer });
       setEditInput(false);
 
-      // If there are hidden layers, update the first one's input neurons
-      if (layers.length > 0) {
-        const updatedLayers = [...layers];
-        updatedLayers[0].input_neurons = validatedCurrentLayer.neurons;
-        setLayers(updatedLayers);
-        updateNNParams(updatedLayers);
-      } else if (showOutputLayer) {
-        // If no hidden layers but output exists, update output's input neurons
-        setOutputLayer((prev) => ({
-          ...prev,
-          input_neurons: validatedCurrentLayer.neurons,
-        }));
+      // If output neurons changed, update the next layer's input neurons
+      if (oldNeurons !== validatedCurrentLayer.neurons) {
+        // If there are hidden layers, update the first one's input neurons
+        if (layers.length > 0) {
+          const updatedLayers = [...layers];
+          updatedLayers[0].input_neurons = validatedCurrentLayer.neurons;
+          setLayers(updatedLayers);
+          updateNNParams(updatedLayers);
+        } else if (showOutputLayer) {
+          // If no hidden layers but output exists, update output's input neurons
+          setOutputLayer((prev) => ({
+            ...prev,
+            input_neurons: validatedCurrentLayer.neurons,
+          }));
+        }
       }
 
       setCurrentLayer({
@@ -222,8 +288,29 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         activation: "relu",
       });
     } else if (editOutput) {
+      // Editing output layer
+      const oldInputNeurons = outputLayer.input_neurons;
       setOutputLayer({ ...validatedCurrentLayer });
       setEditOutput(false);
+
+      // If input neurons changed, update the previous layer's output neurons
+      if (oldInputNeurons !== validatedCurrentLayer.input_neurons) {
+        if (layers.length > 0) {
+          // Update the last hidden layer's output neurons
+          const updatedLayers = [...layers];
+          updatedLayers[layers.length - 1].neurons =
+            validatedCurrentLayer.input_neurons;
+          setLayers(updatedLayers);
+          updateNNParams(updatedLayers);
+        } else if (showInputLayer) {
+          // If no hidden layers, update input layer's output neurons
+          setInputLayer((prev) => ({
+            ...prev,
+            neurons: validatedCurrentLayer.input_neurons,
+          }));
+        }
+      }
+
       setCurrentLayer({
         neurons: "10",
         input_neurons: "3",
@@ -245,14 +332,21 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
   const removeLayer = (index) => {
     if (layers.length > 0) {
+      const layerBeingRemoved = layers[index];
       const updatedLayers = layers.filter((_, i) => i !== index);
 
+      // Update connections between remaining layers
       if (index < layers.length - 1 && updatedLayers.length > index) {
+        // Get the neurons from the previous layer (or input if removing first hidden layer)
         const prevLayerNeurons =
           index > 0 ? updatedLayers[index - 1].neurons : inputLayer.neurons;
 
+        // Update the input neurons of the layer that now follows the removed layer
         updatedLayers[index].input_neurons = prevLayerNeurons;
-      } else if (showOutputLayer) {
+      }
+
+      // If we're removing the last hidden layer, update output layer
+      if (index === layers.length - 1 && showOutputLayer) {
         const prevLayerNeurons =
           updatedLayers.length > 0
             ? updatedLayers[updatedLayers.length - 1].neurons
@@ -266,7 +360,17 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
       setLayers(updatedLayers);
 
-      if (editingIndex === index) {
+      // If this was the last hidden layer, reset editing state
+      if (updatedLayers.length === 0) {
+        setEditingIndex(-1);
+        setEditInput(false);
+        setEditOutput(false);
+        setCurrentLayer({
+          neurons: "10",
+          input_neurons: "3",
+          activation: "relu",
+        });
+      } else if (editingIndex === index) {
         setEditingIndex(-1);
         setCurrentLayer({
           neurons: "10",
@@ -285,6 +389,16 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     if (!showOutputLayer && layers.length === 0) {
       // If only input layer exists, remove it
       setShowInputLayer(false);
+
+      // Reset any editing state
+      setEditInput(false);
+      setEditOutput(false);
+      setEditingIndex(-1);
+      setCurrentLayer({
+        neurons: "10",
+        input_neurons: "3",
+        activation: "relu",
+      });
     } else {
       // Can't remove input if other layers exist
       setToastMessage(
@@ -297,6 +411,16 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     if (layers.length === 0) {
       // If no hidden layers, just remove output
       setShowOutputLayer(false);
+
+      // Reset any editing state
+      setEditInput(false);
+      setEditOutput(false);
+      setEditingIndex(-1);
+      setCurrentLayer({
+        neurons: "10",
+        input_neurons: "3",
+        activation: "relu",
+      });
     } else {
       // Can't remove output if hidden layers exist
       setToastMessage(
@@ -406,17 +530,27 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       // Remove the hidden layer that's becoming output
       updatedLayers = layers.filter((_, i) => i !== index);
 
-      // Add the old output layer as a hidden layer
-      // Set its input_neurons to match the previous layer
+      // If there's a layer before the one being converted to output
+      const prevLayerIndex = index - 1;
       const prevLayerNeurons =
-        index > 0 ? layers[index - 1].neurons : inputLayer.neurons;
+        prevLayerIndex >= 0
+          ? layers[prevLayerIndex].neurons
+          : inputLayer.neurons;
 
+      // Add the old output layer as a hidden layer at the same position
+      // and ensure its input_neurons match the previous layer's output
       const oldOutputAsHidden = {
         ...currentOutputConfig,
         input_neurons: prevLayerNeurons,
       };
 
-      updatedLayers.push(oldOutputAsHidden);
+      // Insert the old output at the position of the converted layer
+      updatedLayers.splice(index, 0, oldOutputAsHidden);
+
+      // Now update any subsequent layers to maintain consistency
+      if (index < updatedLayers.length - 1) {
+        updatedLayers[index + 1].input_neurons = oldOutputAsHidden.neurons;
+      }
 
       // Update state
       setLayers(updatedLayers);
@@ -430,12 +564,28 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     }
 
     // Set the selected layer as output
-    setOutputLayer(newOutputConfig);
+    // Ensure input_neurons matches the previous layer's output neurons
+    const prevLayerOutput =
+      index > 0 && updatedLayers.length > 0
+        ? updatedLayers[index - 1].neurons
+        : index === 0 && showInputLayer
+        ? inputLayer.neurons
+        : newOutputConfig.input_neurons;
+
+    setOutputLayer({
+      ...newOutputConfig,
+      input_neurons: prevLayerOutput,
+    });
 
     // Reset any editing state
     setEditingIndex(-1);
     setEditInput(false);
     setEditOutput(false);
+    setCurrentLayer({
+      neurons: "10",
+      input_neurons: "3",
+      activation: "relu",
+    });
 
     updateNNParams(updatedLayers);
   };
