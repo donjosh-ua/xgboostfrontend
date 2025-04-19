@@ -30,50 +30,6 @@ a {
   margin-bottom: 40px;
 }
 
-.model-selection {
-  padding: 20px;
-  flex-grow: 1;
-}
-
-.model-selection h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 1.2rem;
-  color: var(--text-color);
-}
-
-.model-button {
-  width: 100%;
-  padding: 10px 15px;
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  margin-bottom: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  color: var(--text-color);
-  transition: all 0.2s ease;
-}
-
-.model-button svg {
-  margin-right: 10px;
-}
-
-.model-button:hover {
-  background-color: var(--accent-color-light);
-}
-
-.active-model {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.active-model:hover {
-  background-color: var(--secondary-color);
-}
-
 /* Main content styles */
 .main-content {
   flex-grow: 1;
@@ -127,13 +83,8 @@ header ul {
 
 header button {
   width: 135px;
-  padding: 8px 16px;
-  border-radius: 4px;
   font-size: 0.95rem;
   font-weight: 500;
-  background-color: transparent;
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -154,27 +105,13 @@ header button.active-step:hover {
 
 /* Model toggle button */
 .model-toggle-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  background-color: var(--primary-color);
-  color: white !important;
-  border: 1px solid var(--primary-color);
-  cursor: pointer !important;
-  pointer-events: auto !important;
-  transition: all 0.2s ease;
   min-width: 160px;
-  z-index: 100;
   position: relative;
 }
 
 .model-toggle-button:hover {
-  background-color: var(--secondary-color);
-  border-color: var(--secondary-color);
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .model-icon {
