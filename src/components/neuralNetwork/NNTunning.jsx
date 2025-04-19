@@ -200,18 +200,6 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                 />
               </td>
             </tr>
-            {/* <tr>
-              <td>Epochs:</td>
-              <td>
-                <input
-                  type="number"
-                  name="epochs"
-                  value={nnParams.epochs || "20"}
-                  onChange={onInputChange}
-                  min="1"
-                />
-              </td>
-            </tr> */}
             <tr>
               <td>Loss Function:</td>
               <td>
@@ -270,18 +258,6 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                 />
               </td>
             </tr>
-            {/* <tr>
-              <td>Batch Size:</td>
-              <td>
-                <input
-                  type="number"
-                  name="batch_size"
-                  value={nnParams.batch_size || "64"}
-                  onChange={onInputChange}
-                  min="1"
-                />
-              </td>
-            </tr> */}
             <tr>
               <td>Test Split Size:</td>
               <td>
@@ -296,60 +272,6 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                 />
               </td>
             </tr>
-            {/* <tr>
-              <td>Cross Validation:</td>
-              <td>
-                <select
-                  name="cv"
-                  value={nnParams.cv ? "true" : "false"}
-                  onChange={(e) =>
-                    onInputChange({
-                      target: {
-                        name: "cv",
-                        value: e.target.value === "true",
-                      },
-                    })
-                  }
-                >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
-              </td>
-            </tr> */}
-            {/* <tr>
-              <td>K-Fold CV:</td>
-              <td>
-                <input
-                  type="number"
-                  name="Kfold"
-                  value={nnParams.Kfold || "5"}
-                  onChange={onInputChange}
-                  min="2"
-                  max="10"
-                  step="1"
-                />
-              </td>
-            </tr> */}
-            {/* <tr>
-              <td>Bayesian Opt:</td>
-              <td>
-                <select
-                  name="Bay"
-                  value={nnParams.Bay ? "true" : "false"}
-                  onChange={(e) =>
-                    onInputChange({
-                      target: {
-                        name: "Bay",
-                        value: e.target.value === "true",
-                      },
-                    })
-                  }
-                >
-                  <option value="false">No</option>
-                  <option value="true">Yes</option>
-                </select>
-              </td>
-            </tr> */}
             <tr>
               <td>One-Hot Prediction:</td>
               <td>
@@ -370,37 +292,6 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                 </select>
               </td>
             </tr>
-            {/* <tr>
-              <td>Verbose Output:</td>
-              <td>
-                <select
-                  name="verbose"
-                  value={nnParams.verbose ? "true" : "false"}
-                  onChange={(e) =>
-                    onInputChange({
-                      target: {
-                        name: "verbose",
-                        value: e.target.value === "true",
-                      },
-                    })
-                  }
-                >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
-              </td>
-            </tr> */}
-            {/* <tr>
-              <td>Save Model Name:</td>
-              <td>
-                <input
-                  type="text"
-                  name="save_mod"
-                  value={nnParams.save_mod || "ModiR"}
-                  onChange={onInputChange}
-                />
-              </td>
-            </tr> */}
             <tr>
               <td>Process Images:</td>
               <td>
@@ -419,6 +310,18 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   <option value="false">No</option>
                   <option value="true">Yes</option>
                 </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Feature Architect Extension:</td>
+              <td>
+                <input
+                  type="text"
+                  name="FA_ext"
+                  value={nnParams.FA_ext || ""}
+                  onChange={onInputChange}
+                  placeholder="Optional extension"
+                />
               </td>
             </tr>
           </tbody>

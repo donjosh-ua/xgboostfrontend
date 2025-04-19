@@ -16,7 +16,6 @@
 .training-methods {
   display: flex;
   justify-content: center;
-  margin: 15px 0;
   gap: 20px;
 }
 
@@ -122,7 +121,6 @@
 }
 
 .selected-params {
-  margin-bottom: 15px;
   text-align: center;
   width: 100%;
 }
@@ -133,7 +131,7 @@
   padding: 10px;
   margin: 0 auto 15px;
   border-radius: 8px;
-  max-width: 400px;
+  max-width: 300px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -144,14 +142,9 @@
 }
 
 .train-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
   background-color: var(--button-bg-color);
   color: var(--button-text-color);
-  cursor: pointer;
   display: flex;
-  align-items: center;
   gap: 10px;
   margin-top: 10px;
 }

@@ -36,10 +36,6 @@
   align-items: center;
 }
 
-.tunning-description {
-  padding-top: 10px;
-}
-
 .tunning-sections .nn-card {
   width: 100%;
 }
@@ -230,14 +226,6 @@
   justify-content: center;
   margin-top: 20px;
   gap: 15px;
-}
-
-.button-container button,
-.test-button {
-  align-items: center;
-  gap: 10px;
-  transition: background-color 0.2s ease;
-  min-width: 120px;
 }
 
 .button-container button:hover,
@@ -653,9 +641,6 @@
   gap: 5px;
   padding: 8px 12px;
   font-size: 0.9rem;
-  color: white;
-  border: none;
-  border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }

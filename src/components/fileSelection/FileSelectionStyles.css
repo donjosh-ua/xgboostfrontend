@@ -33,6 +33,7 @@
 
 .file-selection-actions button {
   margin: 0;
+  min-width: 110px;
 }
 
 table {

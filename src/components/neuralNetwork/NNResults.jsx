@@ -90,7 +90,7 @@ function NNResults({ selectedFile, modelType }) {
             <FaSpinner className="loadingIcon" /> Testing...
           </>
         ) : (
-          "Test Neural Network"
+          "Test Model"
         )}
       </button>
 

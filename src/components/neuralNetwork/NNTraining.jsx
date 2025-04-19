@@ -152,7 +152,7 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
 
       <div className="cv-toggle-container">
         <label className="toggle-switch">
-          <span>Use Cross Validation</span>
+          <span>Cross Validation</span>
           <div className="switch">
             <input
               type="checkbox"
@@ -439,7 +439,7 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
               <FaSpinner className="loadingIcon" /> Training...
             </>
           ) : (
-            "Train Neural Network"
+            "Train Model"
           )}
         </button>
       </div>
