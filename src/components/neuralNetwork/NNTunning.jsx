@@ -20,7 +20,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
   const [inputLayer, setInputLayer] = useState({
     neurons: "3",
     input_neurons: "3",
-    activation: "none",
+    activation: "relu",
   });
   const [outputLayer, setOutputLayer] = useState({
     neurons: "1",
@@ -111,7 +111,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       setInputLayer({
         neurons: currentLayer.neurons,
         input_neurons: currentLayer.input_neurons,
-        activation: "none",
+        activation: currentLayer.activation,
       });
 
       // Update the currentLayer for the next layer to use input layer's output
@@ -449,6 +449,32 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
   };
 
   const handleLoadParameters = () => {
+    // Format the layers in the required format: activation(input_neurons, output_neurons)
+    const formatLayer = (layer) => {
+      // Capitalize first letter of activation function
+      const activation =
+        layer.activation.charAt(0).toUpperCase() + layer.activation.slice(1);
+      return `${activation}(${layer.input_neurons}, ${layer.neurons})`;
+    };
+
+    // Create the array of formatted layers
+    const formattedLayers = [];
+
+    // Add input layer if it exists
+    if (showInputLayer) {
+      formattedLayers.push(formatLayer(inputLayer));
+    }
+
+    // Add hidden layers
+    layers.forEach((layer) => {
+      formattedLayers.push(formatLayer(layer));
+    });
+
+    // Add output layer if it exists
+    if (showOutputLayer) {
+      formattedLayers.push(formatLayer(outputLayer));
+    }
+
     // Convert all parameter values to appropriate types
     const parsedParams = {
       ...nnParams,
@@ -477,25 +503,36 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       image: Boolean(nnParams.image),
       FA_ext: nnParams.FA_ext,
       image_size: nnParams.image_size,
-      layers: layers.map((layer) => ({
-        neurons: Number(layer.neurons),
-        input_neurons: Number(layer.input_neurons),
-        activation: layer.activation,
-      })),
-      input_layer: {
-        neurons: Number(inputLayer.neurons),
-        input_neurons: Number(inputLayer.input_neurons),
-        activation: inputLayer.activation,
-      },
-      output_layer: {
-        neurons: Number(outputLayer.neurons),
-        input_neurons: Number(outputLayer.input_neurons),
-        activation: outputLayer.activation,
+      // Replace the objects with the formatted strings
+      layers: formattedLayers,
+      // Keep the original objects for local state
+      layersData: {
+        inputLayer: showInputLayer
+          ? {
+              neurons: Number(inputLayer.neurons),
+              input_neurons: Number(inputLayer.input_neurons),
+              activation: inputLayer.activation,
+            }
+          : null,
+        hiddenLayers: layers.map((layer) => ({
+          neurons: Number(layer.neurons),
+          input_neurons: Number(layer.input_neurons),
+          activation: layer.activation,
+        })),
+        outputLayer: showOutputLayer
+          ? {
+              neurons: Number(outputLayer.neurons),
+              input_neurons: Number(outputLayer.input_neurons),
+              activation: outputLayer.activation,
+            }
+          : null,
       },
     };
 
     setParamsLoading(true);
     sessionStorage.setItem("nnParamsLoading", "true");
+
+    console.log("Sending parameters:", parsedParams);
 
     fetch(`${url}/parameters/nn/setparams`, {
       method: "POST",
@@ -852,7 +889,6 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
                         <option value="sigmoid">Sigmoid</option>
                         <option value="tanh">Tanh</option>
                         <option value="softmax">Softmax</option>
-                        {editInput && <option value="none">None</option>}
                       </select>
                     </div>
                   </div>
