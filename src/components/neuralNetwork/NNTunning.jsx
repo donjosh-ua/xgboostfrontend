@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   FaSpinner,
   FaChevronDown,
@@ -11,50 +11,471 @@ import {
 import Toast from "../toast/Toast";
 import "./NNStyles.css";
 
+// Constants for default layer configurations
+const DEFAULT_INPUT_LAYER = {
+  neurons: "3",
+  input_neurons: "3",
+  activation: "relu",
+};
+
+const DEFAULT_OUTPUT_LAYER = {
+  neurons: "1",
+  activation: "sigmoid",
+  input_neurons: "3",
+};
+
+const DEFAULT_HIDDEN_LAYER = {
+  neurons: "10",
+  input_neurons: "3",
+  activation: "relu",
+};
+
+// Layer card component for visualization
+function LayerCard({
+  type,
+  layer,
+  index = null,
+  onEdit,
+  onRemove,
+  onConvert = null,
+}) {
+  const maxNeurons = 10;
+  const displayNeurons =
+    parseInt(layer.neurons) > maxNeurons ? maxNeurons : parseInt(layer.neurons);
+
+  return (
+    <div className={`${type}-layer layer-box`}>
+      <div className="layer-title">
+        {type === "hidden"
+          ? `Hidden Layer ${index + 1}`
+          : `${type.charAt(0).toUpperCase() + type.slice(1)} Layer`}
+      </div>
+      <div className="layer-info">
+        <span>Input: {layer.input_neurons} neurons</span>
+        <span>Output: {layer.neurons} neurons</span>
+        <span>{layer.activation}</span>
+      </div>
+      <div className="neurons-visual">
+        {Array(displayNeurons)
+          .fill()
+          .map((_, i) => (
+            <div
+              key={`${type}-${index !== null ? index : ""}-${i}`}
+              className="neuron"
+            ></div>
+          ))}
+        {parseInt(layer.neurons) > maxNeurons && (
+          <span className="neuron-dots">
+            +{parseInt(layer.neurons) - maxNeurons}
+          </span>
+        )}
+      </div>
+      <div className="layer-actions">
+        <button
+          className="layer-button edit-layer"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          title={`Edit ${type.charAt(0).toUpperCase() + type.slice(1)} Layer`}
+        >
+          <FaEdit />
+        </button>
+        <button
+          className="layer-button remove-layer"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          title={`Remove ${type.charAt(0).toUpperCase() + type.slice(1)} Layer`}
+        >
+          <FaTrash />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Layer configuration form component
+function LayerConfigForm({
+  currentLayer,
+  onChange,
+  editState,
+  onSave,
+  onCancel,
+  showLayers,
+}) {
+  return (
+    <div className="layer-configuration">
+      <div className="layer-title-section">
+        <h4>Layer Configuration</h4>
+        <div className="add-layer-button">
+          {editState.editing ? (
+            <>
+              <button type="button" onClick={onSave} className="save-button">
+                Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={onCancel}
+                className="cancel-button"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={onSave}>
+              <FaPlus />{" "}
+              {!showLayers.input
+                ? "Input Layer"
+                : !showLayers.output
+                ? "Output Layer"
+                : "Hidden Layer"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="layer-config-form">
+        <div className="layer-header">
+          <h5>
+            {editState.editingIndex >= 0
+              ? `Edit Layer ${editState.editingIndex + 1}`
+              : editState.editInput
+              ? "Edit Input Layer"
+              : editState.editOutput
+              ? "Edit Output Layer"
+              : "New Layer"}
+          </h5>
+        </div>
+
+        <div className="input-group">
+          <label>Input Neurons:</label>
+          <input
+            type="number"
+            name="input_neurons"
+            value={currentLayer.input_neurons}
+            onChange={onChange}
+            min="1"
+          />
+        </div>
+        <div className="input-group">
+          <label>Output Neurons:</label>
+          <input
+            type="number"
+            name="neurons"
+            value={currentLayer.neurons}
+            onChange={onChange}
+            min="1"
+          />
+        </div>
+        <div className="input-group">
+          <label>Activation:</label>
+          <select
+            name="activation"
+            value={currentLayer.activation}
+            onChange={onChange}
+          >
+            <option value="relu">ReLU</option>
+            <option value="sigmoid">Sigmoid</option>
+            <option value="tanh">Tanh</option>
+            <option value="softmax">Softmax</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Hyperparameters table component
+function HyperparametersTable({ nnParams, onInputChange }) {
+  return (
+    <div className="nn-card">
+      <h3>Hyperparameters</h3>
+      <div className="table-container">
+        <table>
+          <tbody>
+            <tr>
+              <td>Alpha:</td>
+              <td>
+                <input
+                  type="number"
+                  name="alpha"
+                  value={nnParams.alpha || "0.001"}
+                  onChange={onInputChange}
+                  min="0"
+                  step="0.001"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Epochs:</td>
+              <td>
+                <input
+                  type="number"
+                  name="epochs"
+                  value={nnParams.epochs || "20"}
+                  onChange={onInputChange}
+                  min="1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Loss Function:</td>
+              <td>
+                <select
+                  name="criteria"
+                  value={nnParams.criteria || "cross_entropy"}
+                  onChange={onInputChange}
+                >
+                  <option value="cross_entropy">Cross Entropy</option>
+                  <option value="mse">MSE</option>
+                  <option value="binary_crossentropy">
+                    Binary Cross Entropy
+                  </option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Optimizer:</td>
+              <td>
+                <select
+                  name="optimizer"
+                  value={nnParams.optimizer || "SGD"}
+                  onChange={onInputChange}
+                >
+                  <option value="SGD">SGD</option>
+                  <option value="Adam">Adam</option>
+                  <option value="RMSprop">RMSprop</option>
+                  <option value="Adagrad">Adagrad</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Weight Decay:</td>
+              <td>
+                <input
+                  type="number"
+                  name="decay"
+                  value={nnParams.decay || "0.0"}
+                  onChange={onInputChange}
+                  min="0"
+                  step="0.001"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Momentum:</td>
+              <td>
+                <input
+                  type="number"
+                  name="momentum"
+                  value={nnParams.momentum || "0.9"}
+                  onChange={onInputChange}
+                  min="0"
+                  max="1"
+                  step="0.1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Batch Size:</td>
+              <td>
+                <input
+                  type="number"
+                  name="batch_size"
+                  value={nnParams.batch_size || "64"}
+                  onChange={onInputChange}
+                  min="1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Test Split Size:</td>
+              <td>
+                <input
+                  type="number"
+                  name="test_size"
+                  value={nnParams.test_size || "0.2"}
+                  onChange={onInputChange}
+                  min="0.1"
+                  max="0.5"
+                  step="0.1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Cross Validation:</td>
+              <td>
+                <select
+                  name="cv"
+                  value={nnParams.cv ? "true" : "false"}
+                  onChange={(e) =>
+                    onInputChange({
+                      target: {
+                        name: "cv",
+                        value: e.target.value === "true",
+                      },
+                    })
+                  }
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>K-Fold CV:</td>
+              <td>
+                <input
+                  type="number"
+                  name="Kfold"
+                  value={nnParams.Kfold || "5"}
+                  onChange={onInputChange}
+                  min="2"
+                  max="10"
+                  step="1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Bayesian Opt:</td>
+              <td>
+                <select
+                  name="Bay"
+                  value={nnParams.Bay ? "true" : "false"}
+                  onChange={(e) =>
+                    onInputChange({
+                      target: {
+                        name: "Bay",
+                        value: e.target.value === "true",
+                      },
+                    })
+                  }
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>One-Hot Prediction:</td>
+              <td>
+                <select
+                  name="pred_hot"
+                  value={nnParams.pred_hot ? "true" : "false"}
+                  onChange={(e) =>
+                    onInputChange({
+                      target: {
+                        name: "pred_hot",
+                        value: e.target.value === "true",
+                      },
+                    })
+                  }
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Verbose Output:</td>
+              <td>
+                <select
+                  name="verbose"
+                  value={nnParams.verbose ? "true" : "false"}
+                  onChange={(e) =>
+                    onInputChange({
+                      target: {
+                        name: "verbose",
+                        value: e.target.value === "true",
+                      },
+                    })
+                  }
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Save Model Name:</td>
+              <td>
+                <input
+                  type="text"
+                  name="save_mod"
+                  value={nnParams.save_mod || "ModiR"}
+                  onChange={onInputChange}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Process Images:</td>
+              <td>
+                <select
+                  name="image"
+                  value={nnParams.image ? "true" : "false"}
+                  onChange={(e) =>
+                    onInputChange({
+                      target: {
+                        name: "image",
+                        value: e.target.value === "true",
+                      },
+                    })
+                  }
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function NNTunning({ selectedFile, nnParams, setNNParams }) {
+  // UI state
   const [toastMessage, setToastMessage] = useState("");
   const [paramsLoading, setParamsLoading] = useState(false);
   const [architectureOpen, setArchitectureOpen] = useState(true);
-  const [editInput, setEditInput] = useState(false);
-  const [editOutput, setEditOutput] = useState(false);
-  const [inputLayer, setInputLayer] = useState({
-    neurons: "3",
-    input_neurons: "3",
-    activation: "relu",
-  });
-  const [outputLayer, setOutputLayer] = useState({
-    neurons: "1",
-    activation: "sigmoid",
-    input_neurons: "3",
-  });
+
+  // Layer state
+  const [inputLayer, setInputLayer] = useState(DEFAULT_INPUT_LAYER);
+  const [outputLayer, setOutputLayer] = useState(DEFAULT_OUTPUT_LAYER);
   const [showInputLayer, setShowInputLayer] = useState(true);
   const [showOutputLayer, setShowOutputLayer] = useState(true);
   const [layers, setLayers] = useState([]);
-  const [currentLayer, setCurrentLayer] = useState({
-    neurons: "10",
-    input_neurons: "3",
-    activation: "relu",
-  });
+  const [currentLayer, setCurrentLayer] = useState(DEFAULT_HIDDEN_LAYER);
+
+  // Edit state
   const [editingIndex, setEditingIndex] = useState(-1);
+  const [editInput, setEditInput] = useState(false);
+  const [editOutput, setEditOutput] = useState(false);
+
   const url = import.meta.env.VITE_BASE_URL;
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNNParams((prevParams) => ({
-      ...prevParams,
-      [name]: value,
-    }));
-  };
+  // Input handlers with useCallback
+  const handleInputChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setNNParams((prevParams) => ({
+        ...prevParams,
+        [name]: value,
+      }));
+    },
+    [setNNParams]
+  );
 
-  const handleLayerInputChange = (e) => {
+  const handleLayerInputChange = useCallback((e) => {
     const { name, value } = e.target;
-
-    // Allow empty values during typing
     setCurrentLayer((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
+  }, []);
 
   const handleInputLayerChange = (e) => {
     const { name, value } = e.target;
@@ -429,24 +850,27 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     }
   };
 
-  const updateNNParams = (updatedLayers) => {
-    setNNParams((prev) => {
-      // Always update with current layer count
-      return {
-        ...prev,
-        hidden_layers: updatedLayers.length.toString(),
-        neurons_per_layer:
-          updatedLayers.length > 0 ? updatedLayers[0].neurons : "10",
-        activation:
-          updatedLayers.length > 0 ? updatedLayers[0].activation : "relu",
-        layers: updatedLayers,
-      };
-    });
-  };
+  const updateNNParams = useCallback(
+    (updatedLayers) => {
+      setNNParams((prev) => {
+        // Always update with current layer count
+        return {
+          ...prev,
+          hidden_layers: updatedLayers.length.toString(),
+          neurons_per_layer:
+            updatedLayers.length > 0 ? updatedLayers[0].neurons : "10",
+          activation:
+            updatedLayers.length > 0 ? updatedLayers[0].activation : "relu",
+          layers: updatedLayers,
+        };
+      });
+    },
+    [setNNParams]
+  );
 
-  const toggleArchitecture = () => {
-    setArchitectureOpen(!architectureOpen);
-  };
+  const toggleArchitecture = useCallback(() => {
+    setArchitectureOpen((prev) => !prev);
+  }, []);
 
   const handleLoadParameters = () => {
     // Format the layers in the required format: activation(input_neurons, output_neurons)
@@ -627,6 +1051,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     updateNNParams(updatedLayers);
   };
 
+  // Main component render
   return (
     <div className="nn-tunning-container">
       <h2>Parameters</h2>
@@ -645,509 +1070,71 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
             <div className="architecture-content">
               <div className="architecture-layout">
                 <div className="layer-visualization">
+                  {/* Input Layer */}
                   {showInputLayer && (
-                    <div className="input-layer layer-box">
-                      <div className="layer-title">Input Layer</div>
-                      <div className="layer-info">
-                        <span>Input: {inputLayer.input_neurons} neurons</span>
-                        <span>Output: {inputLayer.neurons} neurons</span>
-                        <span>{inputLayer.activation}</span>
-                      </div>
-                      <div className="neurons-visual">
-                        {Array(
-                          parseInt(inputLayer.neurons) > 10
-                            ? 10
-                            : parseInt(inputLayer.neurons)
-                        )
-                          .fill()
-                          .map((_, i) => (
-                            <div key={`input-${i}`} className="neuron"></div>
-                          ))}
-                        {parseInt(inputLayer.neurons) > 10 && (
-                          <span className="neuron-dots">
-                            +{parseInt(inputLayer.neurons) - 10}
-                          </span>
-                        )}
-                      </div>
-                      <div className="layer-actions">
-                        <button
-                          className="layer-button edit-layer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            editInputLayer();
-                          }}
-                          title="Edit Input Layer"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          className="layer-button remove-layer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeInputLayer();
-                          }}
-                          title="Remove Input Layer"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </div>
+                    <LayerCard
+                      type="input"
+                      layer={inputLayer}
+                      onEdit={editInputLayer}
+                      onRemove={removeInputLayer}
+                    />
                   )}
 
+                  {/* Hidden Layers */}
                   {layers.map((layer, index) => (
-                    <div
+                    <LayerCard
                       key={`layer-${index}`}
-                      className="hidden-layer layer-box"
-                    >
-                      <div className="layer-title">
-                        Hidden Layer {index + 1}
-                      </div>
-                      <div className="layer-info">
-                        <span>Input: {layer.input_neurons} neurons</span>
-                        <span>Output: {layer.neurons} neurons</span>
-                        <span>{layer.activation}</span>
-                      </div>
-                      <div className="neurons-visual">
-                        {Array(
-                          parseInt(layer.neurons) > 10
-                            ? 10
-                            : parseInt(layer.neurons)
-                        )
-                          .fill()
-                          .map((_, i) => (
-                            <div
-                              key={`hidden-${index}-${i}`}
-                              className="neuron"
-                            ></div>
-                          ))}
-                        {parseInt(layer.neurons) > 10 && (
-                          <span className="neuron-dots">
-                            +{parseInt(layer.neurons) - 10}
-                          </span>
-                        )}
-                      </div>
-                      <div className="layer-actions">
-                        <button
-                          className="layer-button edit-layer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            editLayer(index);
-                          }}
-                          title="Edit Layer"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          className="layer-button remove-layer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeLayer(index);
-                          }}
-                          title="Remove Layer"
-                        >
-                          <FaTrash />
-                        </button>
-                        <button
-                          className="layer-button convert-layer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            convertToOutput(index);
-                          }}
-                          title="Set as Output Layer"
-                        >
-                          <FaExchangeAlt />
-                        </button>
-                      </div>
-                    </div>
+                      type="hidden"
+                      layer={layer}
+                      index={index}
+                      onEdit={() => editLayer(index)}
+                      onRemove={() => removeLayer(index)}
+                      onConvert={() => convertToOutput(index)}
+                    />
                   ))}
 
+                  {/* Output Layer */}
                   {showOutputLayer && (
-                    <div className="output-layer layer-box">
-                      <div className="layer-title">Output Layer</div>
-                      <div className="layer-info">
-                        <span>Input: {outputLayer.input_neurons} neurons</span>
-                        <span>Output: {outputLayer.neurons} neurons</span>
-                        <span>{outputLayer.activation}</span>
-                      </div>
-                      <div className="neurons-visual">
-                        {Array(
-                          parseInt(outputLayer.neurons) > 10
-                            ? 10
-                            : parseInt(outputLayer.neurons)
-                        )
-                          .fill()
-                          .map((_, i) => (
-                            <div key={`output-${i}`} className="neuron"></div>
-                          ))}
-                        {parseInt(outputLayer.neurons) > 10 && (
-                          <span className="neuron-dots">
-                            +{parseInt(outputLayer.neurons) - 10}
-                          </span>
-                        )}
-                      </div>
-                      <div className="layer-actions">
-                        <button
-                          className="layer-button edit-layer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            editOutputLayer();
-                          }}
-                          title="Edit Output Layer"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          className="layer-button remove-layer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeOutputLayer();
-                          }}
-                          title="Remove Output Layer"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </div>
+                    <LayerCard
+                      type="output"
+                      layer={outputLayer}
+                      onEdit={editOutputLayer}
+                      onRemove={removeOutputLayer}
+                    />
                   )}
                 </div>
 
-                <div className="layer-configuration">
-                  <div className="layer-title-section">
-                    <h4>Layer Configuration</h4>
-                    <div className="add-layer-button">
-                      {editingIndex >= 0 || editInput || editOutput ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={saveLayerEdit}
-                            className="save-button"
-                          >
-                            Save Changes
-                          </button>
-                          <button
-                            type="button"
-                            onClick={cancelEdit}
-                            className="cancel-button"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <button type="button" onClick={addLayer}>
-                          <FaPlus />{" "}
-                          {!showInputLayer
-                            ? "Input Layer"
-                            : !showOutputLayer
-                            ? "Output Layer"
-                            : "Hidden Layer"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="layer-config-form">
-                    <div className="layer-header">
-                      <h5>
-                        {editingIndex >= 0
-                          ? `Edit Layer ${editingIndex + 1}`
-                          : editInput
-                          ? "Edit Input Layer"
-                          : editOutput
-                          ? "Edit Output Layer"
-                          : "New Layer"}
-                      </h5>
-                    </div>
-
-                    <div className="input-group">
-                      <label>Input Neurons:</label>
-                      <input
-                        type="number"
-                        name="input_neurons"
-                        value={currentLayer.input_neurons}
-                        onChange={handleLayerInputChange}
-                        min="1"
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label>Output Neurons:</label>
-                      <input
-                        type="number"
-                        name="neurons"
-                        value={currentLayer.neurons}
-                        onChange={handleLayerInputChange}
-                        min="1"
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label>Activation:</label>
-                      <select
-                        name="activation"
-                        value={currentLayer.activation}
-                        onChange={handleLayerInputChange}
-                      >
-                        <option value="relu">ReLU</option>
-                        <option value="sigmoid">Sigmoid</option>
-                        <option value="tanh">Tanh</option>
-                        <option value="softmax">Softmax</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <p className="layers-counter">
-                    Total layers:{" "}
-                    {(showInputLayer ? 1 : 0) +
-                      layers.length +
-                      (showOutputLayer ? 1 : 0)}
-                  </p>
-                </div>
+                {/* Layer Configuration Form */}
+                <LayerConfigForm
+                  currentLayer={currentLayer}
+                  onChange={handleLayerInputChange}
+                  editState={{
+                    editing: editingIndex >= 0 || editInput || editOutput,
+                    editingIndex,
+                    editInput,
+                    editOutput,
+                  }}
+                  onSave={
+                    editingIndex >= 0 || editInput || editOutput
+                      ? saveLayerEdit
+                      : addLayer
+                  }
+                  onCancel={cancelEdit}
+                  showLayers={{
+                    input: showInputLayer,
+                    output: showOutputLayer,
+                  }}
+                />
               </div>
             </div>
           )}
         </div>
 
-        <div className="nn-card">
-          <h3>Hyperparameters</h3>
-          <div className="table-container">
-            <table>
-              <tbody>
-                <tr>
-                  <td>Alpha:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="alpha"
-                      value={nnParams.alpha || "0.001"}
-                      onChange={handleInputChange}
-                      min="0"
-                      step="0.001"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Epochs:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="epochs"
-                      value={nnParams.epochs || "20"}
-                      onChange={handleInputChange}
-                      min="1"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Loss Function:</td>
-                  <td>
-                    <select
-                      name="criteria"
-                      value={nnParams.criteria || "cross_entropy"}
-                      onChange={handleInputChange}
-                    >
-                      <option value="cross_entropy">Cross Entropy</option>
-                      <option value="mse">MSE</option>
-                      <option value="binary_crossentropy">
-                        Binary Cross Entropy
-                      </option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Optimizer:</td>
-                  <td>
-                    <select
-                      name="optimizer"
-                      value={nnParams.optimizer || "SGD"}
-                      onChange={handleInputChange}
-                    >
-                      <option value="SGD">SGD</option>
-                      <option value="Adam">Adam</option>
-                      <option value="RMSprop">RMSprop</option>
-                      <option value="Adagrad">Adagrad</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Weight Decay:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="decay"
-                      value={nnParams.decay || "0.0"}
-                      onChange={handleInputChange}
-                      min="0"
-                      step="0.001"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Momentum:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="momentum"
-                      value={nnParams.momentum || "0.9"}
-                      onChange={handleInputChange}
-                      min="0"
-                      max="1"
-                      step="0.1"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Batch Size:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="batch_size"
-                      value={nnParams.batch_size || "64"}
-                      onChange={handleInputChange}
-                      min="1"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Test Split Size:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="test_size"
-                      value={nnParams.test_size || "0.2"}
-                      onChange={handleInputChange}
-                      min="0.1"
-                      max="0.5"
-                      step="0.1"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Cross Validation:</td>
-                  <td>
-                    <select
-                      name="cv"
-                      value={nnParams.cv ? "true" : "false"}
-                      onChange={(e) =>
-                        handleInputChange({
-                          target: {
-                            name: "cv",
-                            value: e.target.value === "true",
-                          },
-                        })
-                      }
-                    >
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td>K-Fold CV:</td>
-                  <td>
-                    <input
-                      type="number"
-                      name="Kfold"
-                      value={nnParams.Kfold || "5"}
-                      onChange={handleInputChange}
-                      min="2"
-                      max="10"
-                      step="1"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Bayesian Opt:</td>
-                  <td>
-                    <select
-                      name="Bay"
-                      value={nnParams.Bay ? "true" : "false"}
-                      onChange={(e) =>
-                        handleInputChange({
-                          target: {
-                            name: "Bay",
-                            value: e.target.value === "true",
-                          },
-                        })
-                      }
-                    >
-                      <option value="false">No</option>
-                      <option value="true">Yes</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td>One-Hot Prediction:</td>
-                  <td>
-                    <select
-                      name="pred_hot"
-                      value={nnParams.pred_hot ? "true" : "false"}
-                      onChange={(e) =>
-                        handleInputChange({
-                          target: {
-                            name: "pred_hot",
-                            value: e.target.value === "true",
-                          },
-                        })
-                      }
-                    >
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Verbose Output:</td>
-                  <td>
-                    <select
-                      name="verbose"
-                      value={nnParams.verbose ? "true" : "false"}
-                      onChange={(e) =>
-                        handleInputChange({
-                          target: {
-                            name: "verbose",
-                            value: e.target.value === "true",
-                          },
-                        })
-                      }
-                    >
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Save Model Name:</td>
-                  <td>
-                    <input
-                      type="text"
-                      name="save_mod"
-                      value={nnParams.save_mod || "ModiR"}
-                      onChange={handleInputChange}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>Process Images:</td>
-                  <td>
-                    <select
-                      name="image"
-                      value={nnParams.image ? "true" : "false"}
-                      onChange={(e) =>
-                        handleInputChange({
-                          target: {
-                            name: "image",
-                            value: e.target.value === "true",
-                          },
-                        })
-                      }
-                    >
-                      <option value="false">No</option>
-                      <option value="true">Yes</option>
-                    </select>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* Hyperparameters Table */}
+        <HyperparametersTable
+          nnParams={nnParams}
+          onInputChange={handleInputChange}
+        />
       </div>
 
       <div className="button-container">

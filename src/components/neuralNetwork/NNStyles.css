@@ -11,17 +11,6 @@
   width: 100%;
 }
 
-.nn-tunning-container h2,
-.nn-training-container h2,
-.nn-results-container h2,
-.nn-tunning-container p,
-.nn-training-container p,
-.nn-results-container p {
-  color: var(--text-color);
-  margin-bottom: 5px;
-  text-align: center;
-}
-
 /* Card styles */
 .nn-card {
   background-color: var(--card-bg-color);
@@ -465,18 +454,20 @@
   cursor: pointer;
   border-bottom: 1px solid var(--border-color);
   width: 100%;
+  padding-bottom: 10px;
 }
 
 .collapsible-header h3 {
   margin-right: 10px;
+  margin-bottom: 0;
 }
 
 .collapsible-header svg {
   display: flex;
   align-items: center;
   position: relative;
-  top: -5px; /* Adjust the icon position upward a bit more */
-  font-size: 0.9em; /* Make the icon slightly smaller */
+  top: -5px;
+  font-size: 0.9em;
 }
 
 .architecture-content {
@@ -498,11 +489,12 @@
   overflow: hidden;
 }
 
+/* Layer visualization styles */
 .layer-visualization {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
   min-width: 200px;
   max-width: 350px;
   max-height: 320px;
@@ -517,108 +509,6 @@
   width: 100%;
 }
 
-/* Layer connections - adjusted for scrolling container */
-.layer-visualization::before {
-  display: none; /* Remove the vertical line */
-}
-
-.layer-configuration {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 400px;
-  padding-left: 15px;
-  position: relative;
-}
-
-.layer-title-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.layer-title-section h4 {
-  margin: 0;
-}
-
-.layer-controls {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  min-width: 250px;
-  max-width: 400px;
-}
-
-.layer-config-form {
-  background-color: var(--card-bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.layer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.layer-header h5 {
-  margin: 0;
-}
-
-.layer-actions {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  gap: 5px;
-  z-index: 3;
-}
-
-.layer-button {
-  background: none;
-  border: none;
-  color: var(--text-color);
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-}
-
-.edit-layer {
-  color: var(--primary-color);
-}
-
-.edit-layer:hover {
-  background-color: rgba(var(--primary-color-rgb), 0.1);
-  color: var(--primary-color);
-}
-
-.remove-layer {
-  color: var(--text-color);
-}
-
-.remove-layer:hover {
-  color: #ff4d4d;
-  background-color: rgba(255, 77, 77, 0.1);
-}
-
-.convert-layer {
-  color: var(--text-color);
-}
-
-.convert-layer:hover {
-  color: #ffa500;
-  background-color: rgba(255, 165, 0, 0.1);
-}
-
 .layer-box {
   width: 90%;
   background-color: var(--card-bg);
@@ -631,11 +521,17 @@
   position: relative;
   z-index: 2;
   margin-bottom: 10px;
+  transition: transform 0.2s ease;
+}
+
+.layer-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 .layer-title {
   font-weight: bold;
-  margin-bottom: 2px;
+  margin-bottom: 5px;
   color: var(--primary-color);
 }
 
@@ -644,7 +540,7 @@
   flex-direction: column;
   align-items: center;
   font-size: 0.85rem;
-  margin-bottom: 2px;
+  margin-bottom: 5px;
   line-height: 1.2;
   text-align: center;
   width: 100%;
@@ -664,7 +560,7 @@
   justify-content: center;
   align-items: center;
   gap: 3px;
-  margin: 3px 0;
+  margin: 5px 0;
   max-width: 220px;
   white-space: nowrap;
   min-height: 20px;
@@ -695,7 +591,79 @@
   vertical-align: middle;
 }
 
-/* Add styles to fix the save/cancel buttons layout */
+/* Layer actions and buttons */
+.layer-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 5px;
+  z-index: 3;
+}
+
+.layer-button {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.edit-layer {
+  color: var(--primary-color);
+}
+
+.edit-layer:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+  color: var(--primary-color);
+}
+
+.remove-layer {
+  color: var(--text-color);
+}
+
+.remove-layer:hover {
+  color: #ff4d4d;
+  background-color: rgba(255, 77, 77, 0.1);
+}
+
+.convert-layer {
+  color: var(--text-color);
+}
+
+.convert-layer:hover {
+  color: #ffa500;
+  background-color: rgba(255, 165, 0, 0.1);
+}
+
+/* Layer configuration form styles */
+.layer-configuration {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+  padding-left: 15px;
+  position: relative;
+}
+
+.layer-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.layer-title-section h4 {
+  margin: 0;
+  color: var(--text-color);
+}
+
 .add-layer-button {
   display: flex;
   gap: 10px;
@@ -707,15 +675,31 @@
   gap: 5px;
   padding: 8px 12px;
   font-size: 0.9rem;
-  background-color: black;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.layer-control-item {
-  background-color: var(--accent-color-light);
+.layer-config-form {
+  background-color: var(--card-bg-color);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.layer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.layer-header h5 {
+  margin: 0;
+  color: var(--primary-color);
 }
 
 .input-group {
@@ -730,6 +714,7 @@
   flex: 1;
   text-align: left;
   font-size: 0.9rem;
+  color: var(--text-color);
 }
 
 .input-group input,
@@ -742,78 +727,33 @@
   color: var(--text-color);
 }
 
-.other-architecture-params {
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid var(--border-color);
-  width: 100%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.other-architecture-params h4 {
-  margin: 0 0 15px 0;
-  color: var(--primary-color);
-  text-align: center;
-  width: 100%;
-}
-
-.other-architecture-params .input-group {
-  width: 100%;
-  max-width: 300px;
-}
-
-/* Layers counter */
-.layers-counter {
-  margin-top: 5px;
-  text-align: left;
-  font-weight: 500;
-  color: var(--primary-color);
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-  padding-left: 0;
-  margin-left: 0;
-  width: 100%;
-  display: block;
-}
-
-/* Responsive adjustments for architecture visualization */
-@media (max-width: 800px) {
-  .architecture-layout {
-    flex-direction: column;
-  }
-
-  .layer-controls {
-    order: -1; /* Move controls above visualization on mobile */
-    max-width: 100%;
-  }
-
-  .layer-visualization {
-    max-width: 100%;
-  }
-}
-
-.training-params-content {
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 15px;
-}
-
+/* Buttons for save/cancel */
 .save-button {
   background-color: var(--secondary-color) !important;
+}
+
+.save-button:hover {
+  background-color: var(--secondary-hover) !important;
 }
 
 .cancel-button {
   background-color: #888 !important;
 }
 
-.layer-visualization .layer-box {
-  padding-top: 25px;
+.cancel-button:hover {
+  background-color: #666 !important;
+}
+
+/* Layers counter */
+.layers-counter {
+  margin-top: 10px;
+  text-align: left;
+  font-weight: 500;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  margin-bottom: 0;
+  padding-left: 0;
+  width: 100%;
 }
 
 /* Make scrollbar thinner and more subtle */
@@ -834,17 +774,40 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
-/* Style the scrollbar */
-.table-container::-webkit-scrollbar {
-  width: 6px;
+/* Responsive adjustments for architecture visualization */
+@media (max-width: 800px) {
+  .architecture-layout {
+    flex-direction: column;
+  }
+
+  .layer-configuration {
+    max-width: 100%;
+    padding-left: 0;
+  }
+
+  .layer-visualization {
+    max-width: 100%;
+    order: 2;
+  }
 }
 
-.table-container::-webkit-scrollbar-track {
-  background: var(--accent-color-light);
-  border-radius: 4px;
-}
+@media (max-width: 600px) {
+  .add-layer-button {
+    flex-direction: column;
+    width: 100%;
+  }
 
-.table-container::-webkit-scrollbar-thumb {
-  background-color: var(--primary-color);
-  border-radius: 4px;
+  .add-layer-button button {
+    width: 100%;
+  }
+
+  .input-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .input-group input,
+  .input-group select {
+    width: 100%;
+  }
 }
