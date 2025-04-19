@@ -97,23 +97,25 @@ function NNTraining({
       </p>
 
       <div className="nn-selected-params">
-        <h3>Current Neural Network Configuration</h3>
-        <div className="nn-params-summary">
-          <p>
-            <strong>Architecture:</strong> {nnParams.hidden_layers} hidden
-            layers with {nnParams.neurons_per_layer} neurons each
-          </p>
-          <p>
-            <strong>Activation:</strong> {nnParams.activation}
-          </p>
-          <p>
-            <strong>Learning Rate:</strong> {nnParams.learning_rate}
-          </p>
+        <h3>Current Configuration</h3>
+        <div className="nn-config-summary">
+          <div className="config-item">
+            <strong>Architecture:</strong> {nnParams.hidden_layers || "1"}{" "}
+            hidden layers
+          </div>
+          <div className="config-item">
+            <strong>Loss Function:</strong>{" "}
+            {nnParams.criteria || "cross_entropy"}
+          </div>
+          <div className="config-item">
+            <strong>Optimizer:</strong> {nnParams.optimizer || "SGD"}
+          </div>
         </div>
       </div>
 
       <div className="training-methods">
         <button
+          type="button"
           className={`method-button ${
             nnTrainingValues.trainingMethod === "split" ? "selected" : ""
           }`}

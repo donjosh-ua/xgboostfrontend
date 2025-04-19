@@ -1054,7 +1054,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
   // Main component render
   return (
     <div className="nn-tunning-container">
-      <h2>Parameters</h2>
+      <h2>Tunning</h2>
       <p className="tunning-description">
         Configure the architecture and hyperparameters for your neural network
       </p>

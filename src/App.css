@@ -27,6 +27,7 @@ a {
   display: flex;
   width: 100%;
   position: relative;
+  margin-bottom: 40px;
 }
 
 .model-selection {
