@@ -52,7 +52,7 @@ function Training({
       trainingValues.trainingMethod === "split"
         ? Number(trainingValues.splitRatio)
         : Number(trainingValues.numFolds);
-  
+
     // Convert distribution parameter values to numbers
     const parsedDistributionParams = Object.fromEntries(
       Object.entries(trainingValues.distributionParams).map(([key, value]) => [
@@ -60,7 +60,7 @@ function Training({
         Number(value),
       ])
     );
-  
+
     const requestData = {
       method: trainingValues.trainingMethod,
       value: value,
@@ -68,7 +68,7 @@ function Training({
       distribution: trainingValues.distribution,
       params: parsedDistributionParams,
     };
-  
+
     fetch(`${url}/train/both`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -86,7 +86,9 @@ function Training({
       })
       .catch((err) => {
         console.error(err);
-        setTrainMessage("There was an error training the model. Please try again.");
+        setTrainMessage(
+          "There was an error training the model. Please try again."
+        );
       })
       .finally(() => {
         setIsLoading(false);
@@ -138,7 +140,8 @@ function Training({
             />
           </label>
           <p>
-            Training: {trainingValues.splitRatio}%, Testing: {100 - trainingValues.splitRatio}%
+            Training: {trainingValues.splitRatio}%, Testing:{" "}
+            {100 - trainingValues.splitRatio}%
           </p>
         </div>
       )}

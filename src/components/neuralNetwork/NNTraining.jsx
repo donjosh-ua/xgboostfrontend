@@ -217,62 +217,6 @@ function NNTraining({
             </label>
           </div>
         </div>
-
-        <div className="options-group">
-          <h3>Metrics</h3>
-          <div className="metrics-checkboxes">
-            <div className="checkbox-row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={nnTrainingValues.metrics.includes("accuracy")}
-                  onChange={(e) =>
-                    handleMetricsChange("accuracy", e.target.checked)
-                  }
-                  disabled={isLoading}
-                />
-                Accuracy
-              </label>
-            </div>
-            <div className="checkbox-row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={nnTrainingValues.metrics.includes("precision")}
-                  onChange={(e) =>
-                    handleMetricsChange("precision", e.target.checked)
-                  }
-                  disabled={isLoading}
-                />
-                Precision
-              </label>
-            </div>
-            <div className="checkbox-row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={nnTrainingValues.metrics.includes("recall")}
-                  onChange={(e) =>
-                    handleMetricsChange("recall", e.target.checked)
-                  }
-                  disabled={isLoading}
-                />
-                Recall
-              </label>
-            </div>
-            <div className="checkbox-row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={nnTrainingValues.metrics.includes("f1")}
-                  onChange={(e) => handleMetricsChange("f1", e.target.checked)}
-                  disabled={isLoading}
-                />
-                F1 Score
-              </label>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="button-container">
