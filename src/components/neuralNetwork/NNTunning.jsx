@@ -200,7 +200,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                 />
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td>Epochs:</td>
               <td>
                 <input
@@ -211,7 +211,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   min="1"
                 />
               </td>
-            </tr>
+            </tr> */}
             <tr>
               <td>Loss Function:</td>
               <td>
@@ -270,7 +270,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                 />
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td>Batch Size:</td>
               <td>
                 <input
@@ -281,7 +281,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   min="1"
                 />
               </td>
-            </tr>
+            </tr> */}
             <tr>
               <td>Test Split Size:</td>
               <td>
@@ -296,7 +296,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                 />
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td>Cross Validation:</td>
               <td>
                 <select
@@ -315,8 +315,8 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   <option value="false">No</option>
                 </select>
               </td>
-            </tr>
-            <tr>
+            </tr> */}
+            {/* <tr>
               <td>K-Fold CV:</td>
               <td>
                 <input
@@ -329,8 +329,8 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   step="1"
                 />
               </td>
-            </tr>
-            <tr>
+            </tr> */}
+            {/* <tr>
               <td>Bayesian Opt:</td>
               <td>
                 <select
@@ -349,7 +349,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   <option value="true">Yes</option>
                 </select>
               </td>
-            </tr>
+            </tr> */}
             <tr>
               <td>One-Hot Prediction:</td>
               <td>
@@ -370,7 +370,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                 </select>
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td>Verbose Output:</td>
               <td>
                 <select
@@ -389,8 +389,8 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   <option value="false">No</option>
                 </select>
               </td>
-            </tr>
-            <tr>
+            </tr> */}
+            {/* <tr>
               <td>Save Model Name:</td>
               <td>
                 <input
@@ -400,7 +400,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   onChange={onInputChange}
                 />
               </td>
-            </tr>
+            </tr> */}
             <tr>
               <td>Process Images:</td>
               <td>
@@ -1000,12 +1000,8 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     // Convert all parameter values to appropriate types
     const parsedParams = {
       ...nnParams,
-      hidden_layers: Number(nnParams.hidden_layers),
-      neurons_per_layer: Number(nnParams.neurons_per_layer),
-      learning_rate: Number(nnParams.learning_rate || 0.01),
       batch_size: Number(nnParams.batch_size || 64),
-      epochs: Number(nnParams.epochs || 20),
-      dropout_rate: Number(nnParams.dropout_rate || 0.2),
+      epochs: Number(nnParams.epochs || 50),
       alpha: Number(nnParams.alpha || 0.001),
       decay: Number(nnParams.decay || 0.0),
       momentum: Number(nnParams.momentum || 0.9),

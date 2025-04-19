@@ -3,12 +3,7 @@ import { FaSpinner } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./NNStyles.css";
 
-function NNTraining({
-  selectedFile,
-  nnParams,
-  nnTrainingValues,
-  setNNTrainingValues,
-}) {
+function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainMessage, setTrainMessage] = useState("");
   const url = import.meta.env.VITE_BASE_URL;
@@ -27,18 +22,13 @@ function NNTraining({
     }));
   };
 
-  const handleMetricsChange = (metric, isChecked) => {
-    if (isChecked) {
-      setNNTrainingValues((prev) => ({
-        ...prev,
-        metrics: [...prev.metrics, metric],
-      }));
-    } else {
-      setNNTrainingValues((prev) => ({
-        ...prev,
-        metrics: prev.metrics.filter((m) => m !== metric),
-      }));
-    }
+  const toggleCrossValidation = () => {
+    const useCrossValidation = !nnTrainingValues.useCrossValidation;
+    setNNTrainingValues((prev) => ({
+      ...prev,
+      useCrossValidation,
+      trainingMethod: useCrossValidation ? "cv" : "standard",
+    }));
   };
 
   const handleTrainModel = () => {
@@ -46,18 +36,23 @@ function NNTraining({
     sessionStorage.setItem("nnTrainingLoading", "true");
     setTrainMessage("");
 
-    const value =
-      nnTrainingValues.trainingMethod === "split"
-        ? Number(nnTrainingValues.splitRatio)
-        : Number(nnTrainingValues.numFolds);
-
+    // If using cross-validation, send numFolds, otherwise just standard training
     const requestData = {
-      method: nnTrainingValues.trainingMethod,
-      value: value,
+      method: nnTrainingValues.useCrossValidation ? "cv" : "standard",
+      value: nnTrainingValues.useCrossValidation
+        ? Number(nnTrainingValues.numFolds)
+        : 0,
       epochs: Number(nnTrainingValues.epochs),
       batch_size: Number(nnTrainingValues.batchSize),
       optimizer: nnTrainingValues.optimizer,
       metrics: nnTrainingValues.metrics,
+      model_name: nnTrainingValues.modelName || "nn_model",
+      // Add distribution parameters if using Bayesian
+      ...(nnTrainingValues.useBayesian && {
+        useBayesian: true,
+        distribution: nnTrainingValues.distribution || "normal",
+        distributionParams: nnTrainingValues.distributionParams || {},
+      }),
     };
 
     fetch(`${url}/train/nn`, {
@@ -67,9 +62,11 @@ function NNTraining({
     })
       .then((res) => {
         if (!res.ok) {
-          throw new Error(
-            "Neural Network training failed with status " + res.status
-          );
+          return res.text().then((text) => {
+            throw new Error(
+              text || `Neural Network training failed with status ${res.status}`
+            );
+          });
         }
         return res.json();
       })
@@ -78,9 +75,12 @@ function NNTraining({
         setTrainMessage("Neural Network trained successfully!");
       })
       .catch((err) => {
-        console.error(err);
+        console.error("Training error:", err);
         setTrainMessage(
-          "There was an error training the neural network. Please try again."
+          `Error: ${
+            err.message ||
+            "There was an error training the neural network. Please try again."
+          }`
         );
       })
       .finally(() => {
@@ -92,9 +92,7 @@ function NNTraining({
   return (
     <div className="nn-training-container">
       <h2>Training</h2>
-      <p>
-        Train your neural network by splitting data or using cross-validation
-      </p>
+      <p>Train your neural network with the current configuration</p>
 
       <div className="nn-selected-params">
         <h3>Current Configuration</h3>
@@ -113,49 +111,22 @@ function NNTraining({
         </div>
       </div>
 
-      <div className="training-methods">
-        <button
-          type="button"
-          className={`method-button ${
-            nnTrainingValues.trainingMethod === "split" ? "selected" : ""
-          }`}
-          onClick={() => handleChange("trainingMethod", "split")}
-          disabled={isLoading}
-        >
-          Split Data
-        </button>
-        <button
-          className={`method-button ${
-            nnTrainingValues.trainingMethod === "cv" ? "selected" : ""
-          }`}
-          onClick={() => handleChange("trainingMethod", "cv")}
-          disabled={isLoading}
-        >
-          Cross Validation
-        </button>
-      </div>
-
-      {nnTrainingValues.trainingMethod === "split" && (
-        <div className="split-ratio">
-          <label>
-            Split Ratio (Train/Test):
+      <div className="cv-toggle-container">
+        <label className="toggle-switch">
+          <span>Use Cross Validation</span>
+          <div className="switch">
             <input
-              type="number"
-              value={nnTrainingValues.splitRatio}
-              onChange={(e) => handleChange("splitRatio", e.target.value)}
-              min="1"
-              max="99"
+              type="checkbox"
+              checked={nnTrainingValues.useCrossValidation}
+              onChange={toggleCrossValidation}
               disabled={isLoading}
             />
-          </label>
-          <p>
-            Training: {nnTrainingValues.splitRatio}%, Testing:{" "}
-            {100 - nnTrainingValues.splitRatio}%
-          </p>
-        </div>
-      )}
+            <span className="slider round"></span>
+          </div>
+        </label>
+      </div>
 
-      {nnTrainingValues.trainingMethod === "cv" && (
+      {nnTrainingValues.useCrossValidation && (
         <div className="num-folds">
           <label>
             Number of Folds:
@@ -171,50 +142,253 @@ function NNTraining({
         </div>
       )}
 
-      <div className="nn-training-options">
-        <div className="options-group">
+      {/* Training Options Cards */}
+      <div className="options-cards">
+        {/* Training Options Card */}
+        <div className="options-card">
           <h3>Training Options</h3>
-
-          <div className="option-row">
-            <label>
-              Batch Size:
-              <input
-                type="number"
-                value={nnTrainingValues.batchSize}
-                onChange={(e) => handleChange("batchSize", e.target.value)}
-                min="1"
-                disabled={isLoading}
-              />
-            </label>
+          <div className="table-container">
+            <table>
+              <tbody>
+                <tr>
+                  <td>Batch Size:</td>
+                  <td>
+                    <input
+                      type="number"
+                      value={nnTrainingValues.batchSize}
+                      onChange={(e) =>
+                        handleChange("batchSize", e.target.value)
+                      }
+                      min="1"
+                      disabled={isLoading}
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Epochs:</td>
+                  <td>
+                    <input
+                      type="number"
+                      value={nnTrainingValues.epochs}
+                      onChange={(e) => handleChange("epochs", e.target.value)}
+                      min="1"
+                      disabled={isLoading}
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>Optimizer:</td>
+                  <td>
+                    <select
+                      value={nnTrainingValues.optimizer}
+                      onChange={(e) =>
+                        handleChange("optimizer", e.target.value)
+                      }
+                      disabled={isLoading}
+                    >
+                      <option value="adam">Adam</option>
+                      <option value="sgd">SGD</option>
+                      <option value="rmsprop">RMSprop</option>
+                      <option value="adagrad">Adagrad</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Save Model Name:</td>
+                  <td>
+                    <input
+                      type="text"
+                      value={nnTrainingValues.modelName || "ModiR"}
+                      onChange={(e) =>
+                        handleChange("modelName", e.target.value)
+                      }
+                      disabled={isLoading}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          <div className="option-row">
-            <label>
-              Epochs:
-              <input
-                type="number"
-                value={nnTrainingValues.epochs}
-                onChange={(e) => handleChange("epochs", e.target.value)}
-                min="1"
-                disabled={isLoading}
-              />
-            </label>
-          </div>
+        {/* Bayesian Configuration Card */}
+        <div className="options-card">
+          <h3>Bayesian Configuration</h3>
+          <div className="table-container">
+            <table>
+              <tbody>
+                <tr>
+                  <td>Use Bayesian:</td>
+                  <td>
+                    <select
+                      value={nnTrainingValues.useBayesian ? "true" : "false"}
+                      onChange={(e) =>
+                        handleChange("useBayesian", e.target.value === "true")
+                      }
+                      disabled={isLoading}
+                    >
+                      <option value="false">No</option>
+                      <option value="true">Yes</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Distribution:</td>
+                  <td>
+                    <select
+                      value={nnTrainingValues.distribution || "normal"}
+                      onChange={(e) =>
+                        handleChange("distribution", e.target.value)
+                      }
+                      disabled={isLoading || !nnTrainingValues.useBayesian}
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="halfnormal">Half Normal</option>
+                      <option value="cauchy">Cauchy</option>
+                      <option value="exponential">Exponential</option>
+                    </select>
+                  </td>
+                </tr>
 
-          <div className="option-row">
-            <label>
-              Optimizer:
-              <select
-                value={nnTrainingValues.optimizer}
-                onChange={(e) => handleChange("optimizer", e.target.value)}
-                disabled={isLoading}
-              >
-                <option value="adam">Adam</option>
-                <option value="sgd">SGD</option>
-                <option value="rmsprop">RMSprop</option>
-                <option value="adagrad">Adagrad</option>
-              </select>
-            </label>
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "normal" && (
+                    <>
+                      <tr>
+                        <td>Mean:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.mean || "0"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                mean: e.target.value,
+                              })
+                            }
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Sigma:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.sigma || "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                sigma: e.target.value,
+                              })
+                            }
+                            min="0.01"
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "halfnormal" && (
+                    <tr>
+                      <td>Sigma:</td>
+                      <td>
+                        <input
+                          type="number"
+                          value={
+                            nnTrainingValues.distributionParams?.sigma || "1"
+                          }
+                          onChange={(e) =>
+                            handleChange("distributionParams", {
+                              ...nnTrainingValues.distributionParams,
+                              sigma: e.target.value,
+                            })
+                          }
+                          min="0.01"
+                          step="0.1"
+                          disabled={isLoading}
+                        />
+                      </td>
+                    </tr>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "cauchy" && (
+                    <>
+                      <tr>
+                        <td>Alpha:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.alpha || "0"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                alpha: e.target.value,
+                              })
+                            }
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Beta:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.beta || "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                beta: e.target.value,
+                              })
+                            }
+                            min="0.01"
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "exponential" && (
+                    <tr>
+                      <td>Lambda:</td>
+                      <td>
+                        <input
+                          type="number"
+                          value={
+                            nnTrainingValues.distributionParams?.lambda || "1"
+                          }
+                          onChange={(e) =>
+                            handleChange("distributionParams", {
+                              ...nnTrainingValues.distributionParams,
+                              lambda: e.target.value,
+                            })
+                          }
+                          min="0.01"
+                          step="0.1"
+                          disabled={isLoading}
+                        />
+                      </td>
+                    </tr>
+                  )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

@@ -74,13 +74,26 @@ function App() {
     },
   });
   const [nnTrainingValues, setNNTrainingValues] = useState({
-    trainingMethod: "split",
-    splitRatio: 70,
+    trainingMethod: "standard",
     numFolds: 5,
+    useCrossValidation: false,
     epochs: 10,
     batchSize: 32,
+    modelName: "nn_model",
     optimizer: "adam",
     metrics: ["accuracy"],
+    // Bayesian optimization parameters
+    useBayesian: false,
+    bayesianIterations: 10,
+    initialPoints: 5,
+    distribution: "normal",
+    distributionParams: {
+      mean: "0",
+      sigma: "1",
+      alpha: "0",
+      beta: "1",
+      lambda: "1",
+    },
   });
 
   // Track model changes
