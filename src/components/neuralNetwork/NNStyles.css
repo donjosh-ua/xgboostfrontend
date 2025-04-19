@@ -794,7 +794,6 @@
 
 /* Toggle Switch for Cross Validation */
 .cv-toggle-container {
-  margin: 10px 0;
   display: flex;
   justify-content: center;
 }
@@ -965,5 +964,76 @@ input:checked + .slider:before {
   .options-card {
     width: 100%;
     max-width: 350px;
+  }
+}
+
+/* Collapsible configuration card styles */
+.nn-config-card {
+  background-color: var(--button-bg-color);
+  color: white;
+  margin: 0 auto 15px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  max-width: 320px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.nn-config-header {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid #333;
+}
+
+.nn-config-header h3 {
+  margin: 0;
+  color: white;
+  padding: 10px;
+}
+
+.nn-config-header svg {
+  transition: transform 0.3s ease;
+}
+
+.nn-config-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.nn-config-content.expanded {
+  max-height: 500px;
+  padding-bottom: 10px;
+}
+
+.nn-config-summary {
+  padding: 10px;
+}
+
+.config-item {
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.config-item strong {
+  color: var(--primary-color);
+  display: block;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 600px) {
+  .nn-config-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .config-item {
+    width: 100%;
+    padding: 6px 0;
   }
 }

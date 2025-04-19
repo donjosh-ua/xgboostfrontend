@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { FaSpinner } from "react-icons/fa";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./NNStyles.css";
 
 function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainMessage, setTrainMessage] = useState("");
+  const [configExpanded, setConfigExpanded] = useState(false);
   const url = import.meta.env.VITE_BASE_URL;
+
+  // Toggle config card expanded state
+  const toggleConfigCard = () => {
+    setConfigExpanded(!configExpanded);
+  };
 
   // Restore loading state on mount
   useEffect(() => {
@@ -133,19 +140,27 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
       <h2>Training</h2>
       <p>Train your neural network with the current configuration</p>
 
-      <div className="nn-selected-params">
-        <h3>Current Configuration</h3>
-        <div className="nn-config-summary">
-          <div className="config-item">
-            <strong>Architecture:</strong> {nnParams.hidden_layers || "1"}{" "}
-            hidden layers
-          </div>
-          <div className="config-item">
-            <strong>Loss Function:</strong>{" "}
-            {nnParams.criteria || "cross_entropy"}
-          </div>
-          <div className="config-item">
-            <strong>Optimizer:</strong> {nnParams.optimizer || "SGD"}
+      <div className="nn-config-card">
+        <div className="nn-config-header" onClick={toggleConfigCard}>
+          <h3>Current Configuration</h3>
+          {configExpanded ? <FaChevronUp /> : <FaChevronDown />}
+        </div>
+        <div
+          className={`nn-config-content ${configExpanded ? "expanded" : ""}`}
+        >
+          <div className="nn-config-summary">
+            <div className="config-item">
+              <strong>Architecture:</strong>
+              {nnParams.layers?.length || "0"} hidden layers
+            </div>
+            <div className="config-item">
+              <strong>Loss Function:</strong>
+              {nnParams.criteria || "cross_entropy"}
+            </div>
+            <div className="config-item">
+              <strong>Optimizer:</strong>
+              {nnTrainingValues.optimizer || "SGD"}
+            </div>
           </div>
         </div>
       </div>
