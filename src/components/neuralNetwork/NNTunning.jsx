@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   FaSpinner,
   FaChevronDown,
@@ -6,7 +6,6 @@ import {
   FaPlus,
   FaTrash,
   FaEdit,
-  FaExchangeAlt,
 } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./NNStyles.css";
@@ -31,14 +30,7 @@ const DEFAULT_HIDDEN_LAYER = {
 };
 
 // Layer card component for visualization
-function LayerCard({
-  type,
-  layer,
-  index = null,
-  onEdit,
-  onRemove,
-  onConvert = null,
-}) {
+function LayerCard({ type, layer, index = null, onEdit, onRemove }) {
   const maxNeurons = 10;
   const displayNeurons =
     parseInt(layer.neurons) > maxNeurons ? maxNeurons : parseInt(layer.neurons);
@@ -457,6 +449,161 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
   const url = import.meta.env.VITE_BASE_URL;
 
+  // Define updateNNParams first since it's used by other functions
+  const updateNNParams = useCallback(
+    (updatedLayers) => {
+      setNNParams((prev) => {
+        // Create a complete representation of the network architecture
+        return {
+          ...prev,
+          // Basic layer info
+          hidden_layers: updatedLayers.length.toString(),
+          neurons_per_layer:
+            updatedLayers.length > 0 ? updatedLayers[0].neurons : "10",
+          activation:
+            updatedLayers.length > 0 ? updatedLayers[0].activation : "relu",
+          // Store full layer configuration
+          architecture: {
+            inputLayer: showInputLayer ? { ...inputLayer } : null,
+            hiddenLayers: updatedLayers.map((layer) => ({ ...layer })),
+            outputLayer: showOutputLayer ? { ...outputLayer } : null,
+          },
+          // Keep original layers array for backward compatibility
+          layers: updatedLayers,
+        };
+      });
+    },
+    [setNNParams, inputLayer, outputLayer, showInputLayer, showOutputLayer]
+  );
+
+  // Initialize parent component state with full architecture on mount
+  useEffect(() => {
+    // Initialize the parent state with the complete architecture information
+    setNNParams((prev) => ({
+      ...prev,
+      architecture: {
+        inputLayer: showInputLayer ? { ...inputLayer } : null,
+        hiddenLayers: layers.map((layer) => ({ ...layer })),
+        outputLayer: showOutputLayer ? { ...outputLayer } : null,
+      },
+      hidden_layers: layers.length.toString(),
+      neurons_per_layer:
+        layers.length > 0 ? layers[0].neurons : inputLayer.neurons,
+      activation:
+        layers.length > 0 ? layers[0].activation : inputLayer.activation,
+    }));
+  }, [
+    setNNParams,
+    showInputLayer,
+    showOutputLayer,
+    inputLayer,
+    outputLayer,
+    layers,
+  ]);
+
+  // Helper function to reset editing state
+  const resetEditingState = useCallback((inputNeurons = "3") => {
+    setEditingIndex(-1);
+    setEditInput(false);
+    setEditOutput(false);
+    setCurrentLayer({
+      neurons: "10",
+      input_neurons: inputNeurons,
+      activation: "relu",
+    });
+  }, []);
+
+  // Create a unified function for layer removal operations
+  const ensureNetworkConsistency = useCallback(
+    (updatedLayers) => {
+      // If there are no hidden layers, connect input directly to output
+      if (updatedLayers.length === 0) {
+        if (showInputLayer && showOutputLayer) {
+          setOutputLayer((prev) => ({
+            ...prev,
+            input_neurons: inputLayer.neurons,
+          }));
+        }
+        return;
+      }
+
+      // Connect first hidden layer to input layer
+      if (showInputLayer && updatedLayers.length > 0) {
+        updatedLayers[0].input_neurons = inputLayer.neurons;
+      }
+
+      // Connect layers to each other
+      for (let i = 1; i < updatedLayers.length; i++) {
+        updatedLayers[i].input_neurons = updatedLayers[i - 1].neurons;
+      }
+
+      // Connect last hidden layer to output layer
+      if (showOutputLayer && updatedLayers.length > 0) {
+        setOutputLayer((prev) => ({
+          ...prev,
+          input_neurons: updatedLayers[updatedLayers.length - 1].neurons,
+        }));
+      }
+
+      return updatedLayers;
+    },
+    [showInputLayer, showOutputLayer, inputLayer.neurons]
+  );
+
+  // Helper function to properly update a layer and maintain network connections
+  const updateLayerAndConnections = useCallback(
+    (index, updatedLayerData) => {
+      const updatedLayers = [...layers];
+
+      // Update the layer with new data
+      if (index >= 0 && index < updatedLayers.length) {
+        const oldLayer = updatedLayers[index];
+        updatedLayers[index] = { ...oldLayer, ...updatedLayerData };
+
+        // If output neurons changed, update the next layer's input
+        if (
+          updatedLayerData.neurons &&
+          updatedLayerData.neurons !== oldLayer.neurons
+        ) {
+          // Update next hidden layer if exists
+          if (index < updatedLayers.length - 1) {
+            updatedLayers[index + 1].input_neurons = updatedLayerData.neurons;
+          }
+          // Otherwise update output layer if it exists
+          else if (showOutputLayer) {
+            setOutputLayer((prev) => ({
+              ...prev,
+              input_neurons: updatedLayerData.neurons,
+            }));
+          }
+        }
+
+        // If input neurons changed, update the previous layer's output
+        if (
+          updatedLayerData.input_neurons &&
+          updatedLayerData.input_neurons !== oldLayer.input_neurons
+        ) {
+          // Update previous hidden layer if exists
+          if (index > 0) {
+            updatedLayers[index - 1].neurons = updatedLayerData.input_neurons;
+          }
+          // Otherwise update input layer if it exists
+          else if (showInputLayer) {
+            setInputLayer((prev) => ({
+              ...prev,
+              neurons: updatedLayerData.input_neurons,
+            }));
+          }
+        }
+      }
+
+      setLayers(updatedLayers);
+      updateNNParams(updatedLayers);
+      return updatedLayers;
+    },
+    [layers, showInputLayer, showOutputLayer, updateNNParams]
+  );
+
   // Input handlers with useCallback
   const handleInputChange = useCallback(
     (e) => {
@@ -477,54 +624,103 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     }));
   }, []);
 
-  const handleInputLayerChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputLayerChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
 
-    if (name === "neurons") {
-      // If changing output neurons of input layer, update input neurons of next layer
-      if (layers.length > 0) {
-        // Update the first hidden layer
-        const updatedLayers = [...layers];
-        updatedLayers[0] = {
-          ...updatedLayers[0],
-          input_neurons: value,
-        };
-        setLayers(updatedLayers);
-        updateNNParams(updatedLayers);
-      } else if (showOutputLayer) {
-        // Update output layer if no hidden layers
-        setOutputLayer((prev) => ({
+      // Update input layer
+      setInputLayer((prev) => {
+        const updatedInputLayer = {
           ...prev,
-          input_neurons: value,
-        }));
-      }
-    }
+          [name]: value,
+        };
 
-    setInputLayer((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+        // Update connections if output neurons have changed
+        if (name === "neurons") {
+          if (layers.length > 0) {
+            // Update the first hidden layer
+            const updatedLayers = [...layers];
+            updatedLayers[0].input_neurons = value;
+            setLayers(updatedLayers);
 
-  const handleOutputLayerChange = (e) => {
-    const { name, value } = e.target;
+            // Ensure the whole network remains consistent
+            ensureNetworkConsistency(updatedLayers);
 
-    if (name === "input_neurons" && layers.length === 0) {
-      // If changing input neurons of output layer with no hidden layers,
-      // update output neurons of input layer to match
-      setInputLayer((prev) => ({
-        ...prev,
-        neurons: value,
-      }));
-    }
+            updateNNParams(updatedLayers);
+          } else if (showOutputLayer) {
+            // Update output layer if no hidden layers
+            setOutputLayer((prev) => ({
+              ...prev,
+              input_neurons: value,
+            }));
+          }
+        } else {
+          // For other changes, just keep state in sync
+          updateNNParams([...layers]);
+        }
 
-    setOutputLayer((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+        return updatedInputLayer;
+      });
+    },
+    [
+      layers,
+      showOutputLayer,
+      setLayers,
+      setOutputLayer,
+      updateNNParams,
+      ensureNetworkConsistency,
+    ]
+  );
 
-  const addLayer = () => {
+  const handleOutputLayerChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+
+      // Update output layer
+      setOutputLayer((prev) => {
+        const updatedOutputLayer = {
+          ...prev,
+          [name]: value,
+        };
+
+        // If changing input neurons, update the previous layer's output neurons
+        if (name === "input_neurons") {
+          if (layers.length > 0) {
+            // Update the last hidden layer's output
+            const updatedLayers = [...layers];
+            updatedLayers[updatedLayers.length - 1].neurons = value;
+            setLayers(updatedLayers);
+
+            // Ensure the whole network remains consistent
+            ensureNetworkConsistency(updatedLayers);
+
+            updateNNParams(updatedLayers);
+          } else if (showInputLayer) {
+            // If no hidden layers, update input layer's output neurons
+            setInputLayer((prev) => ({
+              ...prev,
+              neurons: value,
+            }));
+          }
+        } else {
+          // For other changes, just keep state in sync
+          updateNNParams([...layers]);
+        }
+
+        return updatedOutputLayer;
+      });
+    },
+    [
+      layers,
+      showInputLayer,
+      setLayers,
+      setInputLayer,
+      updateNNParams,
+      ensureNetworkConsistency,
+    ]
+  );
+
+  const addLayer = useCallback(() => {
     if (!showInputLayer) {
       // First layer should be input
       setShowInputLayer(true);
@@ -536,10 +732,10 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       });
 
       // Update the currentLayer for the next layer to use input layer's output
-      setCurrentLayer((prev) => ({
-        ...prev,
-        input_neurons: currentLayer.neurons,
-      }));
+      resetEditingState(currentLayer.neurons);
+
+      // Sync state after adding input layer
+      updateNNParams([]);
     } else if (!showOutputLayer) {
       // Second layer should be output
       setShowOutputLayer(true);
@@ -556,11 +752,10 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       });
 
       // Reset currentLayer for future layers
-      setCurrentLayer({
-        neurons: "10",
-        input_neurons: currentLayer.neurons, // Use current output as next input
-        activation: "relu",
-      });
+      resetEditingState(currentLayer.neurons);
+
+      // Sync state after adding output layer
+      updateNNParams([]);
     } else {
       // Adding a hidden layer
       const inputNeurons =
@@ -575,25 +770,34 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
       // Insert the new layer before the output layer
       const updatedLayers = [...layers, newLayer];
+
+      // Ensure network connections are consistent
+      ensureNetworkConsistency(updatedLayers);
+
       setLayers(updatedLayers);
 
-      // Update output layer's input neurons to match the new layer's output
-      setOutputLayer((prev) => ({
-        ...prev,
-        input_neurons: newLayer.neurons,
-      }));
-
       // Reset currentLayer for next addition
-      setCurrentLayer({
-        neurons: "10",
-        input_neurons: newLayer.neurons, // Use current output as next input
-        activation: "relu",
-      });
+      resetEditingState(newLayer.neurons);
 
       updateNNParams(updatedLayers);
     }
-  };
+  }, [
+    showInputLayer,
+    showOutputLayer,
+    currentLayer,
+    layers,
+    inputLayer,
+    resetEditingState,
+    updateNNParams,
+    ensureNetworkConsistency,
+    setLayers,
+    setInputLayer,
+    setOutputLayer,
+    setShowInputLayer,
+    setShowOutputLayer,
+  ]);
 
+  // Update the editLayer function to use the new helper
   const editLayer = (index) => {
     setEditInput(false);
     setEditOutput(false);
@@ -615,6 +819,10 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     setCurrentLayer({ ...outputLayer });
   };
 
+  const cancelEdit = () => {
+    resetEditingState();
+  };
+
   const saveLayerEdit = () => {
     // Validate the currentLayer values before saving
     const validatedCurrentLayer = {
@@ -632,59 +840,12 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
     if (editingIndex >= 0) {
       // Editing a hidden layer
-      const updatedLayers = [...layers];
-      const oldNeurons = updatedLayers[editingIndex].neurons;
-      updatedLayers[editingIndex] = { ...validatedCurrentLayer };
-      setLayers(updatedLayers);
-
-      // Ensure consistency with next layer (if any)
-      if (editingIndex < layers.length - 1) {
-        // Update input_neurons of the next hidden layer
-        updatedLayers[editingIndex + 1].input_neurons =
-          validatedCurrentLayer.neurons;
-      } else if (showOutputLayer) {
-        // Update input_neurons of output layer
-        setOutputLayer((prev) => ({
-          ...prev,
-          input_neurons: validatedCurrentLayer.neurons,
-        }));
-      }
-
-      // Ensure consistency with previous layer (if any)
-      if (editingIndex > 0) {
-        // If input_neurons changed, check if it needs to be updated to match previous layer's output
-        if (
-          validatedCurrentLayer.input_neurons !==
-          layers[editingIndex].input_neurons
-        ) {
-          // Optionally update previous layer's neurons to match
-          // updatedLayers[editingIndex - 1].neurons = validatedCurrentLayer.input_neurons;
-        }
-      } else if (
-        showInputLayer &&
-        validatedCurrentLayer.input_neurons !==
-          layers[editingIndex].input_neurons
-      ) {
-        // Update input layer's output neurons if first hidden layer's input changed
-        setInputLayer((prev) => ({
-          ...prev,
-          neurons: validatedCurrentLayer.input_neurons,
-        }));
-      }
-
-      setEditingIndex(-1);
-      setCurrentLayer({
-        neurons: "10",
-        input_neurons: "3",
-        activation: "relu",
-      });
-
-      updateNNParams(updatedLayers);
+      updateLayerAndConnections(editingIndex, validatedCurrentLayer);
+      resetEditingState(validatedCurrentLayer.neurons);
     } else if (editInput) {
       // Editing input layer
       const oldNeurons = inputLayer.neurons;
       setInputLayer({ ...validatedCurrentLayer });
-      setEditInput(false);
 
       // If output neurons changed, update the next layer's input neurons
       if (oldNeurons !== validatedCurrentLayer.neurons) {
@@ -703,16 +864,12 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         }
       }
 
-      setCurrentLayer({
-        neurons: "10",
-        input_neurons: validatedCurrentLayer.neurons,
-        activation: "relu",
-      });
+      resetEditingState(validatedCurrentLayer.neurons);
+      updateNNParams(layers);
     } else if (editOutput) {
       // Editing output layer
       const oldInputNeurons = outputLayer.input_neurons;
       setOutputLayer({ ...validatedCurrentLayer });
-      setEditOutput(false);
 
       // If input neurons changed, update the previous layer's output neurons
       if (oldInputNeurons !== validatedCurrentLayer.input_neurons) {
@@ -732,72 +889,24 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         }
       }
 
-      setCurrentLayer({
-        neurons: "10",
-        input_neurons: "3",
-        activation: "relu",
-      });
+      resetEditingState(validatedCurrentLayer.neurons);
+      updateNNParams(layers);
     }
-  };
-
-  const cancelEdit = () => {
-    setEditingIndex(-1);
-    setEditInput(false);
-    setEditOutput(false);
-    setCurrentLayer({
-      neurons: "10",
-      input_neurons: "3",
-      activation: "relu",
-    });
   };
 
   const removeLayer = (index) => {
     if (layers.length > 0) {
-      const layerBeingRemoved = layers[index];
+      // Remove the layer
       const updatedLayers = layers.filter((_, i) => i !== index);
 
-      // Update connections between remaining layers
-      if (index < layers.length - 1 && updatedLayers.length > index) {
-        // Get the neurons from the previous layer (or input if removing first hidden layer)
-        const prevLayerNeurons =
-          index > 0 ? updatedLayers[index - 1].neurons : inputLayer.neurons;
-
-        // Update the input neurons of the layer that now follows the removed layer
-        updatedLayers[index].input_neurons = prevLayerNeurons;
-      }
-
-      // If we're removing the last hidden layer, update output layer
-      if (index === layers.length - 1 && showOutputLayer) {
-        const prevLayerNeurons =
-          updatedLayers.length > 0
-            ? updatedLayers[updatedLayers.length - 1].neurons
-            : inputLayer.neurons;
-
-        setOutputLayer((prev) => ({
-          ...prev,
-          input_neurons: prevLayerNeurons,
-        }));
-      }
+      // Ensure network connections are consistent
+      ensureNetworkConsistency(updatedLayers);
 
       setLayers(updatedLayers);
 
-      // If this was the last hidden layer, reset editing state
-      if (updatedLayers.length === 0) {
-        setEditingIndex(-1);
-        setEditInput(false);
-        setEditOutput(false);
-        setCurrentLayer({
-          neurons: "10",
-          input_neurons: "3",
-          activation: "relu",
-        });
-      } else if (editingIndex === index) {
-        setEditingIndex(-1);
-        setCurrentLayer({
-          neurons: "10",
-          input_neurons: "3",
-          activation: "relu",
-        });
+      // Reset editing state if needed
+      if (updatedLayers.length === 0 || editingIndex === index) {
+        resetEditingState();
       } else if (editingIndex > index) {
         setEditingIndex(editingIndex - 1);
       }
@@ -810,16 +919,8 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     if (!showOutputLayer && layers.length === 0) {
       // If only input layer exists, remove it
       setShowInputLayer(false);
-
-      // Reset any editing state
-      setEditInput(false);
-      setEditOutput(false);
-      setEditingIndex(-1);
-      setCurrentLayer({
-        neurons: "10",
-        input_neurons: "3",
-        activation: "relu",
-      });
+      resetEditingState();
+      updateNNParams([]);
     } else {
       // Can't remove input if other layers exist
       setToastMessage(
@@ -832,16 +933,8 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     if (layers.length === 0) {
       // If no hidden layers, just remove output
       setShowOutputLayer(false);
-
-      // Reset any editing state
-      setEditInput(false);
-      setEditOutput(false);
-      setEditingIndex(-1);
-      setCurrentLayer({
-        neurons: "10",
-        input_neurons: "3",
-        activation: "relu",
-      });
+      resetEditingState();
+      updateNNParams([]);
     } else {
       // Can't remove output if hidden layers exist
       setToastMessage(
@@ -849,24 +942,6 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       );
     }
   };
-
-  const updateNNParams = useCallback(
-    (updatedLayers) => {
-      setNNParams((prev) => {
-        // Always update with current layer count
-        return {
-          ...prev,
-          hidden_layers: updatedLayers.length.toString(),
-          neurons_per_layer:
-            updatedLayers.length > 0 ? updatedLayers[0].neurons : "10",
-          activation:
-            updatedLayers.length > 0 ? updatedLayers[0].activation : "relu",
-          layers: updatedLayers,
-        };
-      });
-    },
-    [setNNParams]
-  );
 
   const toggleArchitecture = useCallback(() => {
     setArchitectureOpen((prev) => !prev);
@@ -899,6 +974,29 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       formattedLayers.push(formatLayer(outputLayer));
     }
 
+    // Get the complete architecture data
+    const architectureData = {
+      inputLayer: showInputLayer
+        ? {
+            neurons: Number(inputLayer.neurons),
+            input_neurons: Number(inputLayer.input_neurons),
+            activation: inputLayer.activation,
+          }
+        : null,
+      hiddenLayers: layers.map((layer) => ({
+        neurons: Number(layer.neurons),
+        input_neurons: Number(layer.input_neurons),
+        activation: layer.activation,
+      })),
+      outputLayer: showOutputLayer
+        ? {
+            neurons: Number(outputLayer.neurons),
+            input_neurons: Number(outputLayer.input_neurons),
+            activation: outputLayer.activation,
+          }
+        : null,
+    };
+
     // Convert all parameter values to appropriate types
     const parsedParams = {
       ...nnParams,
@@ -929,28 +1027,8 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       image_size: nnParams.image_size,
       // Replace the objects with the formatted strings
       layers: formattedLayers,
-      // Keep the original objects for local state
-      layersData: {
-        inputLayer: showInputLayer
-          ? {
-              neurons: Number(inputLayer.neurons),
-              input_neurons: Number(inputLayer.input_neurons),
-              activation: inputLayer.activation,
-            }
-          : null,
-        hiddenLayers: layers.map((layer) => ({
-          neurons: Number(layer.neurons),
-          input_neurons: Number(layer.input_neurons),
-          activation: layer.activation,
-        })),
-        outputLayer: showOutputLayer
-          ? {
-              neurons: Number(outputLayer.neurons),
-              input_neurons: Number(outputLayer.input_neurons),
-              activation: outputLayer.activation,
-            }
-          : null,
-      },
+      // Use the consistent architecture structure
+      architecture: architectureData,
     };
 
     setParamsLoading(true);
@@ -966,89 +1044,16 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       .then((res) => res.json())
       .then((data) => {
         console.log("Parameters loaded:", data);
-        setToastMessage("Neural Network parameters loaded successfully!");
+        setToastMessage("Neural Network configuration saved successfully!");
       })
       .catch((err) => {
         console.error(err);
-        setToastMessage("Error loading parameters. Please try again.");
+        setToastMessage("Error saving configuration. Please try again.");
       })
       .finally(() => {
         setParamsLoading(false);
         sessionStorage.removeItem("nnParamsLoading");
       });
-  };
-
-  // Add a function to swap a hidden layer with the output layer
-  const convertToOutput = (index) => {
-    // Store the hidden layer that will become output
-    const newOutputConfig = { ...layers[index] };
-    let updatedLayers = [];
-
-    if (showOutputLayer) {
-      // If there's already an output layer, store it
-      const currentOutputConfig = { ...outputLayer };
-
-      // Remove the hidden layer that's becoming output
-      updatedLayers = layers.filter((_, i) => i !== index);
-
-      // If there's a layer before the one being converted to output
-      const prevLayerIndex = index - 1;
-      const prevLayerNeurons =
-        prevLayerIndex >= 0
-          ? layers[prevLayerIndex].neurons
-          : inputLayer.neurons;
-
-      // Add the old output layer as a hidden layer at the same position
-      // and ensure its input_neurons match the previous layer's output
-      const oldOutputAsHidden = {
-        ...currentOutputConfig,
-        input_neurons: prevLayerNeurons,
-      };
-
-      // Insert the old output at the position of the converted layer
-      updatedLayers.splice(index, 0, oldOutputAsHidden);
-
-      // Now update any subsequent layers to maintain consistency
-      if (index < updatedLayers.length - 1) {
-        updatedLayers[index + 1].input_neurons = oldOutputAsHidden.neurons;
-      }
-
-      // Update state
-      setLayers(updatedLayers);
-    } else {
-      // If there's no output layer yet, just remove the hidden layer
-      updatedLayers = layers.filter((_, i) => i !== index);
-      setLayers(updatedLayers);
-
-      // Show the output layer
-      setShowOutputLayer(true);
-    }
-
-    // Set the selected layer as output
-    // Ensure input_neurons matches the previous layer's output neurons
-    const prevLayerOutput =
-      index > 0 && updatedLayers.length > 0
-        ? updatedLayers[index - 1].neurons
-        : index === 0 && showInputLayer
-        ? inputLayer.neurons
-        : newOutputConfig.input_neurons;
-
-    setOutputLayer({
-      ...newOutputConfig,
-      input_neurons: prevLayerOutput,
-    });
-
-    // Reset any editing state
-    setEditingIndex(-1);
-    setEditInput(false);
-    setEditOutput(false);
-    setCurrentLayer({
-      neurons: "10",
-      input_neurons: "3",
-      activation: "relu",
-    });
-
-    updateNNParams(updatedLayers);
   };
 
   // Main component render
@@ -1089,7 +1094,6 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
                       index={index}
                       onEdit={() => editLayer(index)}
                       onRemove={() => removeLayer(index)}
-                      onConvert={() => convertToOutput(index)}
                     />
                   ))}
 
@@ -1141,7 +1145,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         <button onClick={handleLoadParameters} disabled={paramsLoading}>
           {paramsLoading ? (
             <>
-              <FaSpinner className="loadingIcon" /> Saving Parameters...
+              <FaSpinner className="loadingIcon" /> Saving...
             </>
           ) : (
             "Save Configuration"
