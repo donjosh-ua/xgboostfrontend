@@ -948,6 +948,8 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
   }, []);
 
   const handleLoadParameters = () => {
+    setParamsLoading(true);
+
     // Format the layers in the required format: activation(input_neurons, output_neurons)
     const formatLayer = (layer) => {
       // Capitalize first letter of activation function
@@ -974,41 +976,13 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       formattedLayers.push(formatLayer(outputLayer));
     }
 
-    // Get the complete architecture data
-    const architectureData = {
-      inputLayer: showInputLayer
-        ? {
-            neurons: Number(inputLayer.neurons),
-            input_neurons: Number(inputLayer.input_neurons),
-            activation: inputLayer.activation,
-          }
-        : null,
-      hiddenLayers: layers.map((layer) => ({
-        neurons: Number(layer.neurons),
-        input_neurons: Number(layer.input_neurons),
-        activation: layer.activation,
-      })),
-      outputLayer: showOutputLayer
-        ? {
-            neurons: Number(outputLayer.neurons),
-            input_neurons: Number(outputLayer.input_neurons),
-            activation: outputLayer.activation,
-          }
-        : null,
-    };
-
     // Convert all parameter values to appropriate types
     const parsedParams = {
       ...nnParams,
-      batch_size: Number(nnParams.batch_size || 64),
-      epochs: Number(nnParams.epochs || 50),
       alpha: Number(nnParams.alpha || 0.001),
       decay: Number(nnParams.decay || 0.0),
       momentum: Number(nnParams.momentum || 0.9),
       test_size: Number(nnParams.test_size || 0.2),
-      Kfold: Number(nnParams.Kfold || 5),
-      cv: Boolean(nnParams.cv),
-      Bay: Boolean(nnParams.Bay),
       pred_hot: Boolean(
         nnParams.pred_hot === undefined ? true : nnParams.pred_hot
       ),
@@ -1016,40 +990,24 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         nnParams.verbose === undefined ? true : nnParams.verbose
       ),
       criteria: nnParams.criteria || "cross_entropy",
-      optimizer: nnParams.optimizer || "SGD",
-      save_mod: nnParams.save_mod || "ModiR",
       image: Boolean(nnParams.image),
       FA_ext: nnParams.FA_ext,
       image_size: nnParams.image_size,
       // Replace the objects with the formatted strings
       layers: formattedLayers,
-      // Use the consistent architecture structure
-      architecture: architectureData,
     };
 
-    setParamsLoading(true);
-    sessionStorage.setItem("nnParamsLoading", "true");
+    // Update the state with the parsed parameters
+    setNNParams(parsedParams);
 
-    console.log("Sending parameters:", parsedParams);
+    // Store parameters in session storage as backup
+    sessionStorage.setItem("savedNNParams", JSON.stringify(parsedParams));
 
-    fetch(`${url}/parameters/nn/setparams`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parameters: parsedParams }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Parameters loaded:", data);
-        setToastMessage("Neural Network configuration saved successfully!");
-      })
-      .catch((err) => {
-        console.error(err);
-        setToastMessage("Error saving configuration. Please try again.");
-      })
-      .finally(() => {
-        setParamsLoading(false);
-        sessionStorage.removeItem("nnParamsLoading");
-      });
+    console.log("Parameters saved to state:", parsedParams);
+    setToastMessage("Neural Network configuration saved successfully!");
+
+    // Turn off loading state
+    setParamsLoading(false);
   };
 
   // Main component render

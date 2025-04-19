@@ -35,13 +35,7 @@ function App() {
     colsample_bytree: "",
   });
   const [nnParams, setNNParams] = useState({
-    hidden_layers: "1",
-    neurons_per_layer: "10",
-    activation: "relu",
-    learning_rate: "0.01",
-    batch_size: "64",
     epochs: "20",
-    dropout_rate: "0.2",
     alpha: "0.001",
     criteria: "cross_entropy",
     optimizer: "SGD",
@@ -51,12 +45,9 @@ function App() {
     momentum: "0.9",
     image: false,
     FA_ext: null,
-    Bay: false,
-    save_mod: "ModiR",
     pred_hot: true,
     test_size: "0.2",
     cv: true,
-    Kfold: "5",
     layers: [{ neurons: "10", input_neurons: "3", activation: "relu" }],
   });
   const [trainingValues, setTrainingValues] = useState({
@@ -74,18 +65,14 @@ function App() {
     },
   });
   const [nnTrainingValues, setNNTrainingValues] = useState({
-    trainingMethod: "standard",
     numFolds: 5,
     useCrossValidation: false,
-    epochs: 10,
-    batchSize: 32,
-    modelName: "nn_model",
+    epochs: 50,
+    batchSize: 64,
+    modelName: "ModiR",
     optimizer: "adam",
-    metrics: ["accuracy"],
     // Bayesian optimization parameters
     useBayesian: false,
-    bayesianIterations: 10,
-    initialPoints: 5,
     distribution: "normal",
     distributionParams: {
       mean: "0",
@@ -100,6 +87,20 @@ function App() {
   useEffect(() => {
     console.log("Active model changed to:", activeModel);
   }, [activeModel]);
+
+  // Load saved neural network parameters from session storage if available
+  useEffect(() => {
+    const savedNNParams = sessionStorage.getItem("savedNNParams");
+    if (savedNNParams) {
+      try {
+        const parsedParams = JSON.parse(savedNNParams);
+        setNNParams(parsedParams);
+        console.log("Loaded saved NN parameters from session storage");
+      } catch (error) {
+        console.error("Error parsing saved NN parameters:", error);
+      }
+    }
+  }, []);
 
   const toggleModel = () => {
     console.log("Toggling model from", activeModel);

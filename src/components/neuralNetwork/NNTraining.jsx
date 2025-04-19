@@ -15,7 +15,20 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
     }
   }, []);
 
+  // Ensure numeric values are properly parsed
+  const ensureNumericValue = (value) => {
+    if (value === "" || isNaN(Number(value))) {
+      return "0";
+    }
+    return value.toString();
+  };
+
   const handleChange = (key, value) => {
+    // For numeric fields, ensure they're properly formatted
+    if (["numFolds", "epochs", "batchSize"].includes(key)) {
+      value = ensureNumericValue(value);
+    }
+
     setNNTrainingValues((prev) => ({
       ...prev,
       [key]: value,
@@ -27,7 +40,6 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
     setNNTrainingValues((prev) => ({
       ...prev,
       useCrossValidation,
-      trainingMethod: useCrossValidation ? "cv" : "standard",
     }));
   };
 
@@ -36,18 +48,43 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
     sessionStorage.setItem("nnTrainingLoading", "true");
     setTrainMessage("");
 
-    // If using cross-validation, send numFolds, otherwise just standard training
-    const requestData = {
-      method: nnTrainingValues.useCrossValidation ? "cv" : "standard",
-      value: nnTrainingValues.useCrossValidation
-        ? Number(nnTrainingValues.numFolds)
+    // Create a new object with only the parameters we want to send
+    const filteredNNParams = {
+      // Keep these parameters from nnParams
+      alpha: Number(nnParams.alpha || 0.001),
+      criteria: nnParams.criteria || "cross_entropy",
+      decay: Number(nnParams.decay || 0.0),
+      momentum: Number(nnParams.momentum || 0.9),
+      image: Boolean(nnParams.image),
+      FA_ext: nnParams.FA_ext,
+      image_size: nnParams.image_size,
+      pred_hot: Boolean(nnParams.pred_hot),
+      test_size: Number(nnParams.test_size || 0.2),
+      verbose: Boolean(nnParams.verbose),
+      // Include layers array if needed
+      layers: nnParams.layers || [],
+    };
+
+    // Ensure numFolds is a valid number
+    const numFolds = parseInt(nnTrainingValues.numFolds);
+
+    // Merge with training parameters
+    const combinedParams = {
+      ...filteredNNParams,
+
+      // Training specific parameters
+      cv: nnTrainingValues.useCrossValidation,
+      numFolds: nnTrainingValues.useCrossValidation
+        ? isNaN(numFolds)
+          ? 5
+          : numFolds
         : 0,
       epochs: Number(nnTrainingValues.epochs),
       batch_size: Number(nnTrainingValues.batchSize),
       optimizer: nnTrainingValues.optimizer,
-      metrics: nnTrainingValues.metrics,
-      model_name: nnTrainingValues.modelName || "nn_model",
-      // Add distribution parameters if using Bayesian
+      model_name: nnTrainingValues.modelName || "ModiR",
+
+      // Bayesian parameters if enabled
       ...(nnTrainingValues.useBayesian && {
         useBayesian: true,
         distribution: nnTrainingValues.distribution || "normal",
@@ -55,10 +92,12 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
       }),
     };
 
+    console.log("Sending combined parameters:", combinedParams);
+
     fetch(`${url}/train/nn`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestData),
+      body: JSON.stringify(combinedParams),
     })
       .then((res) => {
         if (!res.ok) {
