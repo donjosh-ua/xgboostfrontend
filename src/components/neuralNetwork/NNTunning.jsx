@@ -48,6 +48,8 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
   const handleLayerInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Allow empty values during typing
     setCurrentLayer((prev) => ({
       ...prev,
       [name]: value,
@@ -74,11 +76,18 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     if (!showInputLayer) {
       // First layer should be input
       setShowInputLayer(true);
+      // Use the current layer values instead of hardcoded values
       setInputLayer({
-        neurons: "3",
-        input_neurons: "3",
+        neurons: currentLayer.neurons,
+        input_neurons: currentLayer.input_neurons,
         activation: "none",
       });
+
+      // Update the currentLayer for the next layer to use input layer's output
+      setCurrentLayer((prev) => ({
+        ...prev,
+        input_neurons: currentLayer.neurons,
+      }));
     } else if (!showOutputLayer) {
       // Second layer should be output
       setShowOutputLayer(true);
@@ -86,10 +95,19 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
         layers.length > 0
           ? layers[layers.length - 1].neurons
           : inputLayer.neurons;
+
+      // Use the current layer values instead of hardcoded values, but keep the inputNeurons
       setOutputLayer({
-        neurons: "1",
-        activation: "sigmoid",
+        neurons: currentLayer.neurons,
+        activation: currentLayer.activation,
         input_neurons: inputNeurons,
+      });
+
+      // Reset currentLayer for future layers
+      setCurrentLayer({
+        neurons: "10",
+        input_neurons: currentLayer.neurons, // Use current output as next input
+        activation: "relu",
       });
     } else {
       const inputNeurons =
@@ -112,7 +130,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
 
       setCurrentLayer({
         neurons: "10",
-        input_neurons: newLayer.neurons,
+        input_neurons: newLayer.neurons, // Use current output as next input
         activation: "relu",
       });
 
@@ -142,17 +160,32 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
   };
 
   const saveLayerEdit = () => {
+    // Validate the currentLayer values before saving
+    const validatedCurrentLayer = {
+      ...currentLayer,
+      neurons:
+        currentLayer.neurons === "" || parseInt(currentLayer.neurons) < 1
+          ? "1"
+          : currentLayer.neurons,
+      input_neurons:
+        currentLayer.input_neurons === "" ||
+        parseInt(currentLayer.input_neurons) < 1
+          ? "1"
+          : currentLayer.input_neurons,
+    };
+
     if (editingIndex >= 0) {
       const updatedLayers = [...layers];
-      updatedLayers[editingIndex] = { ...currentLayer };
+      updatedLayers[editingIndex] = { ...validatedCurrentLayer };
       setLayers(updatedLayers);
 
       if (editingIndex < layers.length - 1) {
-        updatedLayers[editingIndex + 1].input_neurons = currentLayer.neurons;
+        updatedLayers[editingIndex + 1].input_neurons =
+          validatedCurrentLayer.neurons;
       } else if (showOutputLayer) {
         setOutputLayer((prev) => ({
           ...prev,
-          input_neurons: currentLayer.neurons,
+          input_neurons: validatedCurrentLayer.neurons,
         }));
       }
 
@@ -166,30 +199,30 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       updateNNParams(updatedLayers);
     } else if (editInput) {
       // Update input layer configuration with all properties
-      setInputLayer({ ...currentLayer });
+      setInputLayer({ ...validatedCurrentLayer });
       setEditInput(false);
 
       // If there are hidden layers, update the first one's input neurons
       if (layers.length > 0) {
         const updatedLayers = [...layers];
-        updatedLayers[0].input_neurons = currentLayer.neurons;
+        updatedLayers[0].input_neurons = validatedCurrentLayer.neurons;
         setLayers(updatedLayers);
         updateNNParams(updatedLayers);
       } else if (showOutputLayer) {
         // If no hidden layers but output exists, update output's input neurons
         setOutputLayer((prev) => ({
           ...prev,
-          input_neurons: currentLayer.neurons,
+          input_neurons: validatedCurrentLayer.neurons,
         }));
       }
 
       setCurrentLayer({
         neurons: "10",
-        input_neurons: currentLayer.neurons,
+        input_neurons: validatedCurrentLayer.neurons,
         activation: "relu",
       });
     } else if (editOutput) {
-      setOutputLayer({ ...currentLayer });
+      setOutputLayer({ ...validatedCurrentLayer });
       setEditOutput(false);
       setCurrentLayer({
         neurons: "10",
@@ -616,10 +649,10 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
                         <button type="button" onClick={addLayer}>
                           <FaPlus />{" "}
                           {!showInputLayer
-                            ? "Add Input Layer"
+                            ? "Input Layer"
                             : !showOutputLayer
-                            ? "Add Output Layer"
-                            : "Add Hidden Layer"}
+                            ? "Output Layer"
+                            : "Hidden Layer"}
                         </button>
                       )}
                     </div>

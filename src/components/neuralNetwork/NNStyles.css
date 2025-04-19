@@ -24,7 +24,7 @@
 
 /* Card styles */
 .nn-card {
-  background-color: var(--card-bg);
+  background-color: var(--card-bg-color);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
@@ -259,14 +259,6 @@
 
 .button-container button,
 .test-button {
-  padding: 10px 20px;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
   align-items: center;
   gap: 10px;
   transition: background-color 0.2s ease;
@@ -275,7 +267,7 @@
 
 .button-container button:hover,
 .test-button:hover {
-  background-color: var(--primary-color-dark);
+  background-color: var(--primary-color);
 }
 
 .button-container button:disabled,
@@ -517,8 +509,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   align-items: center;
+  background-color: var(--card-bg-color);
   padding: 25px 20px;
-  background-color: var(--accent-color-light);
   border-radius: 8px;
   border: 1px solid var(--border-color);
   position: relative;
@@ -548,7 +540,6 @@
 
 .layer-title-section h4 {
   margin: 0;
-  color: var(--primary-color);
 }
 
 .layer-controls {
@@ -561,7 +552,7 @@
 }
 
 .layer-config-form {
-  background-color: var(--accent-color-light);
+  background-color: var(--card-bg-color);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 20px;
@@ -577,7 +568,6 @@
 
 .layer-header h5 {
   margin: 0;
-  color: var(--primary-color);
 }
 
 .layer-actions {
@@ -705,8 +695,8 @@
   vertical-align: middle;
 }
 
+/* Add styles to fix the save/cancel buttons layout */
 .add-layer-button {
-  margin-bottom: 10px;
   display: flex;
   gap: 10px;
 }
@@ -717,7 +707,7 @@
   gap: 5px;
   padding: 8px 12px;
   font-size: 0.9rem;
-  background-color: var(--primary-color);
+  background-color: black;
 }
 
 .layer-control-item {
