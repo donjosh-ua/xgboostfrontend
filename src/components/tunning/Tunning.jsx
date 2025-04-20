@@ -289,7 +289,7 @@ function Tunning({
               </tr>
             </tbody>
           </table>
-          <button onClick={handleGridSearch} disabled={gridSearchLoading}>
+          <button type="button" onClick={handleGridSearch} disabled={gridSearchLoading}>
             {gridSearchLoading ? (
               <>
                 <FaSpinner className="loadingIcon" /> Searching...

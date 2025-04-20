@@ -123,7 +123,7 @@ function App() {
                 className={activeStep === 0 ? "active-step" : ""}
                 onClick={() => setActiveStep(0)}
               >
-                File Selection
+                Dataset
               </button>
               <button
                 type="button"

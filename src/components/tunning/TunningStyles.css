@@ -104,12 +104,8 @@
 }
 
 .tunning-container .card button {
-  margin-top: 15px;
-  padding: 8px 15px;
   background-color: var(--primary-color);
-  color: white;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;

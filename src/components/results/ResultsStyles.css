@@ -3,10 +3,11 @@
 }
 
 .result-image {
-  border: 1px solid #ccc;
+    color: black;
+  border: 1px solid var(--border-color);
   padding: 10px;
   text-align: center;
-  background-color: #fafafa;
+  /* background-color: #fafafa; */
   border-radius: 4px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   background-color: var(--card-bg-color);
