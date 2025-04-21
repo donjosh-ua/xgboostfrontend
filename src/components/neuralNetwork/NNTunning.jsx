@@ -14,19 +14,19 @@ import "./NNStyles.css";
 const DEFAULT_INPUT_LAYER = {
   neurons: "3",
   input_neurons: "3",
-  activation: "relu",
+  activation: "ReLU",
 };
 
 const DEFAULT_OUTPUT_LAYER = {
   neurons: "1",
-  activation: "sigmoid",
+  activation: "Sigmoid",
   input_neurons: "3",
 };
 
 const DEFAULT_HIDDEN_LAYER = {
   neurons: "10",
   input_neurons: "3",
-  activation: "relu",
+  activation: "ReLU",
 };
 
 // Layer card component for visualization
@@ -318,7 +318,7 @@ function HyperparametersTable({ nnParams, onInputChange }) {
   );
 }
 
-function NNTunning({ selectedFile, nnParams, setNNParams }) {
+function NNTunning({ nnParams, setNNParams }) {
   // UI state
   const [toastMessage, setToastMessage] = useState("");
   const [paramsLoading, setParamsLoading] = useState(false);
@@ -337,8 +337,6 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
   const [editInput, setEditInput] = useState(false);
   const [editOutput, setEditOutput] = useState(false);
 
-  const url = import.meta.env.VITE_XGB_URL;
-
   // Define updateNNParams first since it's used by other functions
   const updateNNParams = useCallback(
     (updatedLayers) => {
@@ -351,7 +349,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
           neurons_per_layer:
             updatedLayers.length > 0 ? updatedLayers[0].neurons : "10",
           activation:
-            updatedLayers.length > 0 ? updatedLayers[0].activation : "relu",
+            updatedLayers.length > 0 ? updatedLayers[0].activation : "ReLU",
           // Store full layer configuration
           architecture: {
             inputLayer: showInputLayer ? { ...inputLayer } : null,
@@ -365,6 +363,58 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     },
     [setNNParams, inputLayer, outputLayer, showInputLayer, showOutputLayer]
   );
+
+  // Load saved configuration on mount (if available)
+  useEffect(() => {
+    const saved = sessionStorage.getItem("savedNNParams");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.architecture) {
+          if (parsed.architecture.inputLayer) {
+            setInputLayer(parsed.architecture.inputLayer);
+            setShowInputLayer(true);
+          }
+          if (parsed.architecture.outputLayer) {
+            setOutputLayer(parsed.architecture.outputLayer);
+            setShowOutputLayer(true);
+          }
+          if (parsed.architecture.hiddenLayers) {
+            setLayers(parsed.architecture.hiddenLayers);
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing saved configuration:", error);
+      }
+    }
+  }, []);
+
+  // Load unsaved form inputs on mount, if available
+  useEffect(() => {
+    const savedForm = sessionStorage.getItem("nnTunningForm");
+    if (savedForm) {
+      try {
+        const { currentLayer: savedCurrentLayer, nnParams: savedNNParams } =
+          JSON.parse(savedForm);
+        if (savedCurrentLayer) {
+          setCurrentLayer(savedCurrentLayer);
+        }
+        if (savedNNParams) {
+          setNNParams(savedNNParams);
+        }
+      } catch (error) {
+        console.error("Error parsing saved form inputs:", error);
+      }
+    }
+  }, []);
+
+  // Persist currentLayer and nnParams changes on every update
+  useEffect(() => {
+    sessionStorage.setItem(
+      "nnTunningForm",
+      JSON.stringify({ currentLayer, nnParams })
+    );
+  }, [currentLayer, nnParams]);
 
   // Initialize parent component state with full architecture on mount
   useEffect(() => {
@@ -399,7 +449,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
     setCurrentLayer({
       neurons: "10",
       input_neurons: inputNeurons,
-      activation: "relu",
+      activation: "ReLU",
     });
   }, []);
 
@@ -513,102 +563,6 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
       [name]: value,
     }));
   }, []);
-
-  const handleInputLayerChange = useCallback(
-    (e) => {
-      const { name, value } = e.target;
-
-      // Update input layer
-      setInputLayer((prev) => {
-        const updatedInputLayer = {
-          ...prev,
-          [name]: value,
-        };
-
-        // Update connections if output neurons have changed
-        if (name === "neurons") {
-          if (layers.length > 0) {
-            // Update the first hidden layer
-            const updatedLayers = [...layers];
-            updatedLayers[0].input_neurons = value;
-            setLayers(updatedLayers);
-
-            // Ensure the whole network remains consistent
-            ensureNetworkConsistency(updatedLayers);
-
-            updateNNParams(updatedLayers);
-          } else if (showOutputLayer) {
-            // Update output layer if no hidden layers
-            setOutputLayer((prev) => ({
-              ...prev,
-              input_neurons: value,
-            }));
-          }
-        } else {
-          // For other changes, just keep state in sync
-          updateNNParams([...layers]);
-        }
-
-        return updatedInputLayer;
-      });
-    },
-    [
-      layers,
-      showOutputLayer,
-      setLayers,
-      setOutputLayer,
-      updateNNParams,
-      ensureNetworkConsistency,
-    ]
-  );
-
-  const handleOutputLayerChange = useCallback(
-    (e) => {
-      const { name, value } = e.target;
-
-      // Update output layer
-      setOutputLayer((prev) => {
-        const updatedOutputLayer = {
-          ...prev,
-          [name]: value,
-        };
-
-        // If changing input neurons, update the previous layer's output neurons
-        if (name === "input_neurons") {
-          if (layers.length > 0) {
-            // Update the last hidden layer's output
-            const updatedLayers = [...layers];
-            updatedLayers[updatedLayers.length - 1].neurons = value;
-            setLayers(updatedLayers);
-
-            // Ensure the whole network remains consistent
-            ensureNetworkConsistency(updatedLayers);
-
-            updateNNParams(updatedLayers);
-          } else if (showInputLayer) {
-            // If no hidden layers, update input layer's output neurons
-            setInputLayer((prev) => ({
-              ...prev,
-              neurons: value,
-            }));
-          }
-        } else {
-          // For other changes, just keep state in sync
-          updateNNParams([...layers]);
-        }
-
-        return updatedOutputLayer;
-      });
-    },
-    [
-      layers,
-      showInputLayer,
-      setLayers,
-      setInputLayer,
-      updateNNParams,
-      ensureNetworkConsistency,
-    ]
-  );
 
   const addLayer = useCallback(() => {
     if (!showInputLayer) {
