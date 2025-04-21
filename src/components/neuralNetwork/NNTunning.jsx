@@ -209,25 +209,9 @@ function HyperparametersTable({ nnParams, onInputChange }) {
                   onChange={onInputChange}
                 >
                   <option value="cross_entropy">Cross Entropy</option>
-                  <option value="mse">MSE</option>
-                  <option value="binary_crossentropy">
-                    Binary Cross Entropy
-                  </option>
-                </select>
-              </td>
-            </tr>
-            <tr>
-              <td>Optimizer:</td>
-              <td>
-                <select
-                  name="optimizer"
-                  value={nnParams.optimizer || "SGD"}
-                  onChange={onInputChange}
-                >
-                  <option value="SGD">SGD</option>
-                  <option value="Adam">Adam</option>
-                  <option value="RMSprop">RMSprop</option>
-                  <option value="Adagrad">Adagrad</option>
+                  <option value="sse">SSE</option>
+                  <option value="logneg">NLLLoss</option>
+                  <option value="entropybin">BCELoss</option>
                 </select>
               </td>
             </tr>

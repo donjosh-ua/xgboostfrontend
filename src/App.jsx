@@ -205,6 +205,7 @@ function App() {
                   nnParams={nnParams}
                   nnTrainingValues={nnTrainingValues}
                   setNNTrainingValues={setNNTrainingValues}
+                  activeModel={activeModel}
                 />
               )}
               {activeStep === 3 && (

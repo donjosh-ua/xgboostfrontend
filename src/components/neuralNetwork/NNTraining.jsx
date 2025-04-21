@@ -4,11 +4,16 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./NNStyles.css";
 
-function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
+function NNTraining({
+  nnParams,
+  nnTrainingValues,
+  setNNTrainingValues,
+  activeModel,
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainMessage, setTrainMessage] = useState("");
   const [configExpanded, setConfigExpanded] = useState(false);
-  const url = import.meta.env.VITE_XGB_URL;
+  const url = import.meta.env.VITE_BNN_URL;
 
   // Toggle config card expanded state
   const toggleConfigCard = () => {
@@ -50,89 +55,74 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
     }));
   };
 
-  const handleTrainModel = () => {
+  const handleTrainModel = async () => {
     setIsLoading(true);
     sessionStorage.setItem("nnTrainingLoading", "true");
     setTrainMessage("");
 
-    // Create a new object with only the parameters we want to send
-    const filteredNNParams = {
-      // Keep these parameters from nnParams
-      alpha: Number(nnParams.alpha || 0.001),
-      criteria: nnParams.criteria || "cross_entropy",
-      decay: Number(nnParams.decay || 0.0),
-      momentum: Number(nnParams.momentum || 0.9),
-      image: Boolean(nnParams.image),
-      FA_ext: nnParams.FA_ext,
-      image_size: nnParams.image_size,
-      pred_hot: Boolean(nnParams.pred_hot),
-      test_size: Number(nnParams.test_size || 0.2),
-      verbose: Boolean(nnParams.verbose),
-      // Include layers array if needed
-      layers: nnParams.layers || [],
-    };
+    try {
+      // Ensure activeModel comparison is case-insensitive
+      const mode = activeModel.toLowerCase();
+      if (mode === "neuralnetwork") {
+        // BNN mode payload
+        const bnnParams = {
+          alpha: Number(nnParams.alpha || 0.001),
+          epoch: Number(nnTrainingValues.epochs) || 20,
+          criteria: nnParams.criteria || "cross_entropy",
+          optimizer: nnTrainingValues.optimizer || "SGD",
+          image_size: Number(nnParams.image_size) || 0,
+          verbose: Boolean(nnParams.verbose),
+          decay: Number(nnParams.decay || 0),
+          momentum: Number(nnParams.momentum || 0.9),
+          image: Boolean(nnParams.image),
+          FA_ext: nnParams.FA_ext || "string",
+          useBayesian: Boolean(nnTrainingValues.useBayesian),
+          save_mod: nnTrainingValues.modelName || "ModiR",
+          pred_hot: Boolean(nnParams.pred_hot),
+          test_size: Number(nnParams.test_size || 0.2),
+          batch_size: Number(nnTrainingValues.batchSize) || 64,
+          cv: nnTrainingValues.useCrossValidation,
+          numFolds: nnTrainingValues.useCrossValidation
+            ? parseInt(nnTrainingValues.numFolds) || 5
+            : 0,
+          layers: nnParams.layers || [],
+        };
 
-    // Ensure numFolds is a valid number
-    const numFolds = parseInt(nnTrainingValues.numFolds);
+        console.log("Sending BNN training parameters:", bnnParams);
 
-    // Merge with training parameters
-    const combinedParams = {
-      ...filteredNNParams,
+        const res = await fetch(`${url}/train/normal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bnnParams),
+        });
 
-      // Training specific parameters
-      cv: nnTrainingValues.useCrossValidation,
-      numFolds: nnTrainingValues.useCrossValidation
-        ? isNaN(numFolds)
-          ? 5
-          : numFolds
-        : 0,
-      epochs: Number(nnTrainingValues.epochs),
-      batch_size: Number(nnTrainingValues.batchSize),
-      optimizer: nnTrainingValues.optimizer,
-      model_name: nnTrainingValues.modelName || "ModiR",
-
-      // Bayesian parameters if enabled
-      ...(nnTrainingValues.useBayesian && {
-        useBayesian: true,
-        distribution: nnTrainingValues.distribution || "normal",
-        distributionParams: nnTrainingValues.distributionParams || {},
-      }),
-    };
-
-    console.log("Sending combined parameters:", combinedParams);
-
-    fetch(`${url}/train/nn`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(combinedParams),
-    })
-      .then((res) => {
         if (!res.ok) {
-          return res.text().then((text) => {
-            throw new Error(
-              text || `Neural Network training failed with status ${res.status}`
-            );
-          });
+          const text = await res.text();
+          throw new Error(text || `Training failed with status ${res.status}`);
         }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Train response:", data);
-        setTrainMessage("Neural Network trained successfully!");
-      })
-      .catch((err) => {
-        console.error("Training error:", err);
+
+        const data = await res.json();
+        console.log("Train response (BNN):", data);
+        setTrainMessage("Neural network trained successfully!");
+      } else {
+        // Fallback for non-BNN mode (currently not implemented)
+        console.log("Non-neuralnetwork training triggered");
         setTrainMessage(
-          `Error: ${
-            err.message ||
-            "There was an error training the neural network. Please try again."
-          }`
+          "Training for non-neuralnetwork mode is not implemented yet."
         );
-      })
-      .finally(() => {
-        setIsLoading(false);
-        sessionStorage.removeItem("nnTrainingLoading");
-      });
+      }
+    } catch (err) {
+      console.error("Training error:", err);
+      setTrainMessage(
+        `Error: ${
+          err.message ||
+          "There was an error training the model. Please try again."
+        }`
+      );
+    } finally {
+      setIsLoading(false);
+      sessionStorage.removeItem("nnTrainingLoading");
+    }
   };
 
   return (
@@ -244,6 +234,7 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
                       <option value="sgd">SGD</option>
                       <option value="rmsprop">RMSprop</option>
                       <option value="adagrad">Adagrad</option>
+                      <option value="nesterov">Nesterov</option>
                     </select>
                   </td>
                 </tr>
