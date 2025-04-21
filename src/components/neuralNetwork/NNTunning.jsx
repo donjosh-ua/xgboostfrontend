@@ -168,10 +168,13 @@ function LayerConfigForm({
             value={currentLayer.activation}
             onChange={onChange}
           >
-            <option value="relu">ReLU</option>
-            <option value="sigmoid">Sigmoid</option>
-            <option value="tanh">Tanh</option>
-            <option value="softmax">Softmax</option>
+            <option value="Tanh">Tanh</option>
+            <option value="Softmax">Softmax</option>
+            <option value="SoftmaxBay">SoftmaxBay</option>
+            <option value="Sigmoid">Sigmoid</option>
+            <option value="ReLU">ReLU</option>
+            <option value="LeakyReLU">LeakyReLU</option>
+            <option value="LogSoftMax">LogSoftMax</option>
           </select>
         </div>
       </div>
