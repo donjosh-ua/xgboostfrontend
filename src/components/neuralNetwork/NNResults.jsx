@@ -27,6 +27,16 @@ function NNResults({ selectedFile, modelType }) {
     }
   }, []);
 
+  // Persist metrics to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("nnResultsMetrics", JSON.stringify(metrics));
+  }, [metrics]);
+
+  // Persist resultsImages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("nnResultsImages", JSON.stringify(resultsImages));
+  }, [resultsImages]);
+
   const handleTestRun = () => {
     setIsTesting(true);
     sessionStorage.setItem("nnResultsTesting", "true");
