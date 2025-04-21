@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaSpinner } from "react-icons/fa";
 import Toast from "../toast/Toast";
+import MetricsCard from "../metricsCard/MetricsCard";
+import ResultsImagesGrid from "./ResultsImagesGrid";
 import "./NNStyles.css";
 
 function NNResults({ selectedFile, modelType }) {
@@ -9,7 +11,7 @@ function NNResults({ selectedFile, modelType }) {
   const [resultsImages, setResultsImages] = useState({});
   const [metrics, setMetrics] = useState({});
   const [modalImage, setModalImage] = useState(null);
-  const url = import.meta.env.VITE_XGB_URL;
+  const url = import.meta.env.VITE_BNN_URL;
 
   useEffect(() => {
     const cachedImages = localStorage.getItem("nnResultsImages");
@@ -29,19 +31,27 @@ function NNResults({ selectedFile, modelType }) {
     setIsTesting(true);
     sessionStorage.setItem("nnResultsTesting", "true");
     setToastMessage("");
-    fetch(`${url}/test/nn/run`, {
-      method: "POST",
+    fetch(`${url}/train/results`, {
+      method: "GET",
     })
       .then((res) => {
         if (!res.ok) {
-          throw new Error(
-            "Neural Network test run failed with status " + res.status
-          );
+          throw new Error("Test run failed with status " + res.status);
         }
         return res.json();
       })
       .then((data) => {
-        console.log("Test run response:", data);
+        console.log("Train results response:", data);
+        if (data.results && typeof data.results === "object") {
+          setMetrics(data.results);
+          localStorage.setItem(
+            "nnResultsMetrics",
+            JSON.stringify(data.results)
+          );
+        } else {
+          setMetrics({});
+          localStorage.removeItem("nnResultsMetrics");
+        }
         if (data.images && typeof data.images === "object") {
           setResultsImages(data.images);
           localStorage.setItem("nnResultsImages", JSON.stringify(data.images));
@@ -49,21 +59,7 @@ function NNResults({ selectedFile, modelType }) {
           setResultsImages({});
           localStorage.removeItem("nnResultsImages");
         }
-
-        if (data.metrics && typeof data.metrics === "object") {
-          setMetrics(data.metrics);
-          localStorage.setItem(
-            "nnResultsMetrics",
-            JSON.stringify(data.metrics)
-          );
-        } else {
-          setMetrics({});
-          localStorage.removeItem("nnResultsMetrics");
-        }
-
-        setToastMessage(
-          data.message || "Neural Network test run completed successfully!"
-        );
+        setToastMessage(data.message || "Test run completed successfully!");
       })
       .catch((err) => {
         console.error(err);
@@ -98,43 +94,13 @@ function NNResults({ selectedFile, modelType }) {
         <Toast message={toastMessage} onClose={() => setToastMessage("")} />
       )}
 
-      {Object.keys(metrics).length > 0 && (
-        <div className="nn-metrics-results">
-          <h3>Performance Metrics</h3>
-          <div className="metrics-grid">
-            {Object.entries(metrics).map(([key, value]) => (
-              <div key={key} className="metric-card">
-                <h4>{key.replace(/_/g, " ").toUpperCase()}</h4>
-                <div className="metric-value">
-                  {typeof value === "number" ? value.toFixed(4) : value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {Object.keys(metrics).length > 0 && <MetricsCard metrics={metrics} />}
 
       {Object.keys(resultsImages).length > 0 && (
-        <div className="nn-results-images">
-          <h3>Visualizations</h3>
-          <div className="images-grid">
-            {Object.entries(resultsImages).map(([key, base64String]) => (
-              <div
-                key={key}
-                className="result-image"
-                onClick={() =>
-                  setModalImage(`data:image/png;base64,${base64String}`)
-                }
-              >
-                <h4>{key.replace(/_/g, " ")}</h4>
-                <img
-                  src={`data:image/png;base64,${base64String}`}
-                  alt={`Neural Network test result for ${key}`}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+        <ResultsImagesGrid
+          resultsImages={resultsImages}
+          setModalImage={setModalImage}
+        />
       )}
 
       {modalImage && (

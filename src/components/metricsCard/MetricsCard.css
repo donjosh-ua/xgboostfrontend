@@ -1,0 +1,18 @@
+.nn-metrics-results {
+  text-align: center;
+  margin: 20px auto;
+}
+
+.metrics-grid {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.metric-card {
+  background-color: #f7f7f7;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px;
+  width: 150px;
+}
