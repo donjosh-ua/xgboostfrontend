@@ -124,21 +124,6 @@ function FileSelection({
       return;
     }
 
-    // If MNIST dataset is selected
-    if (filename === "mnist" && fileType === "image") {
-      setSelectedFile({ name: "mnist" });
-      fetch(`${url}/data/mnist_preview`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.image) {
-            setImagePreview(data.image);
-          }
-          setFilePreview([]);
-        })
-        .catch((err) => console.error(err));
-      return;
-    }
-
     // For neuralnetwork mode do not call files/select here;
     // just update the selection.
     if (activeModel === "neuralnetwork") {
@@ -396,9 +381,6 @@ function FileSelection({
         <div className="file-selection-controls">
           <select value={selectedFileName} onChange={handleComboChange}>
             <option value="">Select a file</option>
-            {fileType === "image" && (
-              <option value="mnist">MNIST Dataset</option>
-            )}
             {availableFiles.map((file) => (
               <option key={file} value={file}>
                 {file.replace(/^data\//, "")}
@@ -415,8 +397,8 @@ function FileSelection({
           </button>
         </div>
 
-        {/* Only show header and separator options for CSV in non-BNN mode */}
-        {fileType === "csv" && activeModel !== "neuralnetwork" && (
+        {/* Show header and separator options for CSV, now even in neuralnetwork mode */}
+        {fileType === "csv" && (
           <>
             <div>
               <label>
