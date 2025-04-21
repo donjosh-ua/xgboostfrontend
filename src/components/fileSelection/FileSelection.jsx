@@ -10,6 +10,7 @@ function FileSelection({
   setFilePreview,
   hasHeader,
   setHasHeader,
+  activeModel,
 }) {
   const [separator, setSeparator] = useState(",");
   const [availableFiles, setAvailableFiles] = useState([]);
@@ -30,29 +31,59 @@ function FileSelection({
   const url = import.meta.env.VITE_XGB_URL;
 
   const fetchFiles = () => {
-    fetch(`${url}/data/files`)
-      .then((res) => res.json())
-      .then((data) => {
-        // Store all files but separate them by type
-        const allFiles = data.files || [];
-        const csvFilesArray = allFiles.filter((file) =>
-          file.toLowerCase().endsWith(".csv")
-        );
-        const imageFilesArray = allFiles.filter(
-          (file) => !file.toLowerCase().endsWith(".csv")
-        );
+    if (activeModel === "neuralnetwork") {
+      fetch(`${import.meta.env.VITE_BNN_URL}/files/list`)
+        .then((res) => res.json())
+        .then((data) => {
+          // For neuralnetwork, use the "csv" key for CSV files
+          // and load the special dataset names for image mode
+          const csvFilesArray = data.csv || [];
+          const specialFilesArray = (data.special || []).map(
+            (item) => item.name
+          );
 
-        setCsvFiles(csvFilesArray);
-        setImageFiles(imageFilesArray);
+          setCsvFiles(csvFilesArray);
+          setImageFiles(specialFilesArray);
 
-        // Set the appropriate files based on current mode
-        setAvailableFiles(fileType === "csv" ? csvFilesArray : imageFilesArray);
+          // Set available files based on current file type selection
+          setAvailableFiles(
+            fileType === "csv" ? csvFilesArray : specialFilesArray
+          );
 
-        sessionStorage.setItem("availableFiles", JSON.stringify(data.files));
-        sessionStorage.setItem("csvFiles", JSON.stringify(csvFilesArray));
-        sessionStorage.setItem("imageFiles", JSON.stringify(imageFilesArray));
-      })
-      .catch((err) => console.error(err));
+          sessionStorage.setItem("availableFiles", JSON.stringify(data));
+          sessionStorage.setItem("csvFiles", JSON.stringify(csvFilesArray));
+          sessionStorage.setItem(
+            "imageFiles",
+            JSON.stringify(specialFilesArray)
+          );
+        })
+        .catch((err) => console.error(err));
+    } else {
+      // For xgboost (existing behavior)
+      fetch(`${url}/data/files`)
+        .then((res) => res.json())
+        .then((data) => {
+          const allFiles = data.files || [];
+          const csvFilesArray = allFiles.filter((file) =>
+            file.toLowerCase().endsWith(".csv")
+          );
+          const imageFilesArray = allFiles.filter(
+            (file) => !file.toLowerCase().endsWith(".csv")
+          );
+
+          setCsvFiles(csvFilesArray);
+          setImageFiles(imageFilesArray);
+
+          setAvailableFiles(
+            fileType === "csv" ? csvFilesArray : imageFilesArray
+          );
+
+          sessionStorage.setItem("availableFiles", JSON.stringify(data.files));
+          sessionStorage.setItem("csvFiles", JSON.stringify(csvFilesArray));
+          sessionStorage.setItem("imageFiles", JSON.stringify(imageFilesArray));
+        })
+        .catch((err) => console.error(err));
+    }
   };
 
   useEffect(() => {
@@ -60,7 +91,6 @@ function FileSelection({
     if (storedFileType) {
       setFileType(storedFileType);
     }
-
     fetchFiles();
     const storedSelected = sessionStorage.getItem("selectedFileName");
     if (storedSelected) {
@@ -68,6 +98,11 @@ function FileSelection({
       setFileSource("combo");
     }
   }, []);
+
+  // Re-fetch files when activeModel changes (update the combo box)
+  useEffect(() => {
+    fetchFiles();
+  }, [activeModel]);
 
   // Update available files when file type changes
   useEffect(() => {
@@ -104,6 +139,14 @@ function FileSelection({
       return;
     }
 
+    // For neuralnetwork mode do not call files/select here;
+    // just update the selection.
+    if (activeModel === "neuralnetwork") {
+      setSelectedFile({ name: filename });
+      return;
+    }
+
+    // For xgboost mode, use the existing POST endpoint
     fetch(`${url}/data/select`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -178,12 +221,40 @@ function FileSelection({
   // The button now conditionally uploads the file if selected from system,
   // or loads the file if selected from combo.
   const handleLoadFile = () => {
-    if (!selectedFile) {
+    if (!selectedFileName) {
       alert("No file selected");
       return;
     }
     setIsLoadFileLoading(true);
 
+    // For neuralnetwork mode, call the BNN files/select endpoint on load
+    if (activeModel === "neuralnetwork") {
+      fetch(`${import.meta.env.VITE_BNN_URL}/files/select`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          file_path: selectedFileName,
+          has_header: hasHeader,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("BNN select response:", data);
+          setToastMessage("File loaded successfully!");
+          setSelectedFile({ name: selectedFileName });
+          // Do not show any preview in BNN mode.
+        })
+        .catch((err) => {
+          console.error(err);
+          setToastMessage("Error loading file. Please try again.");
+        })
+        .finally(() => {
+          setIsLoadFileLoading(false);
+        });
+      return;
+    }
+
+    // Existing behavior for xgboost mode
     if (fileSource === "system") {
       const formData = new FormData();
       formData.append("file", selectedFile);
@@ -330,7 +401,7 @@ function FileSelection({
             )}
             {availableFiles.map((file) => (
               <option key={file} value={file}>
-                {file}
+                {file.replace(/^data\//, "")}
               </option>
             ))}
           </select>
@@ -344,8 +415,8 @@ function FileSelection({
           </button>
         </div>
 
-        {/* Only show header and separator options for CSV */}
-        {fileType === "csv" && (
+        {/* Only show header and separator options for CSV in non-BNN mode */}
+        {fileType === "csv" && activeModel !== "neuralnetwork" && (
           <>
             <div>
               <label>
@@ -413,45 +484,50 @@ function FileSelection({
           </button>
         </div>
       </div>
-      {/* Show appropriate preview based on file type */}
-      {selectedFile && filePreview.length > 0 && fileType === "csv" && (
-        <div className="file-preview">
-          <h3>Preview (first 10 rows):</h3>
-          <div className="table-container">
-            <table onDrop={handleDrop}>
-              <thead>
-                <tr>
-                  {(hasHeader
-                    ? filePreview[0].split(separator)
-                    : generateHeaders(filePreview[0])
-                  ).map((header, index) => (
-                    <th key={index}>{header}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filePreview.slice(hasHeader ? 1 : 0).map((line, index) => (
-                  <tr key={index}>
-                    {line.split(separator).map((cell, cellIndex) => (
-                      <td key={cellIndex}>{cell}</td>
+      {/* Only show preview for non-neural network mode */}
+      {activeModel !== "neuralnetwork" &&
+        selectedFile &&
+        filePreview.length > 0 &&
+        fileType === "csv" && (
+          <div className="file-preview">
+            <h3>Preview (first 10 rows):</h3>
+            <div className="table-container">
+              <table onDrop={handleDrop}>
+                <thead>
+                  <tr>
+                    {(hasHeader
+                      ? filePreview[0].split(separator)
+                      : generateHeaders(filePreview[0])
+                    ).map((header, index) => (
+                      <th key={index}>{header}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filePreview.slice(hasHeader ? 1 : 0).map((line, index) => (
+                    <tr key={index}>
+                      {line.split(separator).map((cell, cellIndex) => (
+                        <td key={cellIndex}>{cell}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Image preview for image mode */}
-      {imagePreview && fileType === "image" && (
-        <div className="image-preview">
-          <h3>Image Preview:</h3>
-          <div className="image-container">
-            <img src={imagePreview} alt="Dataset preview" />
+      {/* Only show image preview for non-BNN mode */}
+      {activeModel !== "neuralnetwork" &&
+        imagePreview &&
+        fileType === "image" && (
+          <div className="image-preview">
+            <h3>Image Preview:</h3>
+            <div className="image-container">
+              <img src={imagePreview} alt="Dataset preview" />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {toastMessage && (
         <Toast message={toastMessage} onClose={() => setToastMessage("")} />

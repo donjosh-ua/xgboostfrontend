@@ -159,6 +159,7 @@ function App() {
               setFilePreview={setFilePreview}
               hasHeader={hasHeader}
               setHasHeader={setHasHeader}
+              activeModel={activeModel}
             />
           )}
 
