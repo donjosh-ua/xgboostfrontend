@@ -13,7 +13,7 @@ function Training({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainMessage, setTrainMessage] = useState("");
-  const url = import.meta.env.VITE_BASE_URL;
+  const url = import.meta.env.VITE_XGB_URL;
 
   // Restore loading state on mount
   useEffect(() => {

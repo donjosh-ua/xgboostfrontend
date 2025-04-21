@@ -9,7 +9,7 @@ function NNResults({ selectedFile, modelType }) {
   const [resultsImages, setResultsImages] = useState({});
   const [metrics, setMetrics] = useState({});
   const [modalImage, setModalImage] = useState(null);
-  const url = import.meta.env.VITE_BASE_URL;
+  const url = import.meta.env.VITE_XGB_URL;
 
   useEffect(() => {
     const cachedImages = localStorage.getItem("nnResultsImages");

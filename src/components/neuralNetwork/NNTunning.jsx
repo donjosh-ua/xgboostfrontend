@@ -350,7 +350,7 @@ function NNTunning({ selectedFile, nnParams, setNNParams }) {
   const [editInput, setEditInput] = useState(false);
   const [editOutput, setEditOutput] = useState(false);
 
-  const url = import.meta.env.VITE_BASE_URL;
+  const url = import.meta.env.VITE_XGB_URL;
 
   // Define updateNNParams first since it's used by other functions
   const updateNNParams = useCallback(

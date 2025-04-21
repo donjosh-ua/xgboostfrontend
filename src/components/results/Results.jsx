@@ -8,7 +8,7 @@ function Results({ modelType = "xgboost" }) {
   const [isTesting, setIsTesting] = useState(false);
   const [resultsImages, setResultsImages] = useState({});
   const [modalImage, setModalImage] = useState(null);
-  const url = import.meta.env.VITE_BASE_URL;
+  const url = import.meta.env.VITE_XGB_URL;
 
   useEffect(() => {
     const cachedImages = localStorage.getItem("resultsImages");

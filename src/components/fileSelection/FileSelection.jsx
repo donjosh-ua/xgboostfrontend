@@ -27,7 +27,7 @@ function FileSelection({
   const [fileType, setFileType] = useState("csv");
   // For preview of image data
   const [imagePreview, setImagePreview] = useState(null);
-  const url = import.meta.env.VITE_BASE_URL;
+  const url = import.meta.env.VITE_XGB_URL;
 
   const fetchFiles = () => {
     fetch(`${url}/data/files`)

@@ -14,7 +14,7 @@ function Tunning({
   const [toastMessage, setToastMessage] = useState("");
   const [paramsLoading, setParamsLoading] = useState(false);
   const [gridSearchLoading, setGridSearchLoading] = useState(false);
-  const url = import.meta.env.VITE_BASE_URL;
+  const url = import.meta.env.VITE_XGB_URL;
 
   // On mount, restore loading states from sessionStorage
   useEffect(() => {
@@ -289,7 +289,11 @@ function Tunning({
               </tr>
             </tbody>
           </table>
-          <button type="button" onClick={handleGridSearch} disabled={gridSearchLoading}>
+          <button
+            type="button"
+            onClick={handleGridSearch}
+            disabled={gridSearchLoading}
+          >
             {gridSearchLoading ? (
               <>
                 <FaSpinner className="loadingIcon" /> Searching...

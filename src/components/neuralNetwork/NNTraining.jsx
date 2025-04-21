@@ -8,7 +8,7 @@ function NNTraining({ nnParams, nnTrainingValues, setNNTrainingValues }) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainMessage, setTrainMessage] = useState("");
   const [configExpanded, setConfigExpanded] = useState(false);
-  const url = import.meta.env.VITE_BASE_URL;
+  const url = import.meta.env.VITE_XGB_URL;
 
   // Toggle config card expanded state
   const toggleConfigCard = () => {
