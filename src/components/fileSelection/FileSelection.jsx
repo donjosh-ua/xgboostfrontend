@@ -149,10 +149,23 @@ function FileSelection({
     }
 
     if (activeModel === "neuralnetwork") {
-      setSelectedFile({ name: filename });
+      // Call your backend preview endpoint
+      fetch(
+        `${import.meta.env.VITE_BNN_URL}/files/preview?file_path=${filename}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          // Assumes the response contains a "preview" property that's an array of lines
+          if (data.preview) {
+            setFilePreview(data.preview);
+            setImagePreview(null);
+          }
+          setSelectedFile({ name: filename });
+        })
+        .catch((err) => console.error(err));
       return;
     }
-    // For xgboost mode, use the existing endpoint...
+    // For non-BNN mode, use the existing data/select endpoint
     fetch(`${url}/data/select`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -494,38 +507,35 @@ function FileSelection({
           </button>
         </div>
       </div>
-      {/* Only show preview for non-neural network mode */}
-      {activeModel !== "neuralnetwork" &&
-        selectedFile &&
-        filePreview.length > 0 &&
-        fileType === "csv" && (
-          <div className="file-preview">
-            <h3>Preview (first 10 rows):</h3>
-            <div className="table-container">
-              <table onDrop={handleDrop}>
-                <thead>
-                  <tr>
-                    {(hasHeader
-                      ? filePreview[0].split(separator)
-                      : generateHeaders(filePreview[0])
-                    ).map((header, index) => (
-                      <th key={index}>{header}</th>
+
+      {selectedFile && filePreview.length > 0 && fileType === "csv" && (
+        <div className="file-preview">
+          <h3>Preview (first 10 rows):</h3>
+          <div className="table-container">
+            <table onDrop={handleDrop}>
+              <thead>
+                <tr>
+                  {(hasHeader
+                    ? filePreview[0].split(separator)
+                    : generateHeaders(filePreview[0])
+                  ).map((header, index) => (
+                    <th key={index}>{header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filePreview.slice(hasHeader ? 1 : 0).map((line, index) => (
+                  <tr key={index}>
+                    {line.split(separator).map((cell, cellIndex) => (
+                      <td key={cellIndex}>{cell}</td>
                     ))}
                   </tr>
-                </thead>
-                <tbody>
-                  {filePreview.slice(hasHeader ? 1 : 0).map((line, index) => (
-                    <tr key={index}>
-                      {line.split(separator).map((cell, cellIndex) => (
-                        <td key={cellIndex}>{cell}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
+      )}
 
       {/* Only show image preview for non-BNN mode */}
       {activeModel !== "neuralnetwork" &&
