@@ -262,38 +262,66 @@ function FileSelection({
     }
     setIsLoadFileLoading(true);
 
-    // For neuralnetwork mode, call the BNN files/select endpoint on load
     if (activeModel === "neuralnetwork") {
-      fetch(`${import.meta.env.VITE_BNN_URL}/files/select`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file_path: selectedFileName,
-          has_header: hasHeader,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("BNN select response:", data);
-          setToastMessage("File loaded successfully!");
-          setSelectedFile({ name: selectedFileName });
-          // Do not show any preview in BNN mode.
+      // If the file came from the system, upload via the new endpoint
+      if (fileSource === "system") {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("type", fileType);
+        formData.append("separator", separator);
+
+        fetch(`${import.meta.env.VITE_BNN_URL}/files/upload`, {
+          method: "POST",
+          body: formData,
         })
-        .catch((err) => {
-          console.error(err);
-          setToastMessage("Error loading file. Please try again.");
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("Upload response:", data);
+            setToastMessage(data.message);
+            fetchFiles();
+            setSelectedFileName(selectedFile.name);
+          })
+          .catch((err) => {
+            console.error(err);
+            setToastMessage("Error uploading file. Please try again.");
+          })
+          .finally(() => {
+            setIsLoadFileLoading(false);
+          });
+      } else {
+        // Otherwise, load the file via the preview/select endpoint
+        fetch(`${import.meta.env.VITE_BNN_URL}/files/select`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            file_path: selectedFileName,
+            has_header: hasHeader,
+          }),
         })
-        .finally(() => {
-          setIsLoadFileLoading(false);
-        });
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("BNN select response:", data);
+            setToastMessage("File loaded successfully!");
+            setSelectedFile({ name: selectedFileName });
+            // Do not show any preview in NN mode if using select
+          })
+          .catch((err) => {
+            console.error(err);
+            setToastMessage("Error loading file. Please try again.");
+          })
+          .finally(() => {
+            setIsLoadFileLoading(false);
+          });
+      }
       return;
     }
 
-    // Existing behavior for xgboost mode
+    // Existing behavior for xgboost mode:
     if (fileSource === "system") {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("type", fileType);
+      formData.append("separator", separator);
 
       fetch(`${url}/data/upload`, {
         method: "POST",
