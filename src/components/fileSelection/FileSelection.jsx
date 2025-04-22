@@ -263,7 +263,6 @@ function FileSelection({
     setIsLoadFileLoading(true);
 
     if (activeModel === "neuralnetwork") {
-      // If the file came from the system, upload via the new endpoint
       if (fileSource === "system") {
         const formData = new FormData();
         formData.append("file", selectedFile);
@@ -279,7 +278,13 @@ function FileSelection({
             console.log("Upload response:", data);
             setToastMessage(data.message);
             fetchFiles();
-            setSelectedFileName(selectedFile.name);
+            const newFilename = data.filename || selectedFile.name;
+            setSelectedFileName(newFilename);
+            sessionStorage.setItem(`selectedFileName_${fileType}`, newFilename);
+            // Update availableFiles if needed so that the combo box shows the new file.
+            if (!availableFiles.includes(newFilename)) {
+              setAvailableFiles((prevFiles) => [...prevFiles, newFilename]);
+            }
           })
           .catch((err) => {
             console.error(err);
@@ -332,7 +337,12 @@ function FileSelection({
           console.log("Upload response:", data);
           setToastMessage(data.message);
           fetchFiles();
-          setSelectedFileName(selectedFile.name);
+          const newFilename = data.filename || selectedFile.name;
+          setSelectedFileName(newFilename);
+          sessionStorage.setItem(`selectedFileName_${fileType}`, newFilename);
+          if (!availableFiles.includes(newFilename)) {
+            setAvailableFiles((prevFiles) => [...prevFiles, newFilename]);
+          }
         })
         .catch((err) => {
           console.error(err);
