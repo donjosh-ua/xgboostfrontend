@@ -87,6 +87,12 @@ function FileSelection({
   };
 
   useEffect(() => {
+    if (selectedFileName && !selectedFile) {
+      setSelectedFile({ name: selectedFileName });
+    }
+  }, [selectedFileName]);
+
+  useEffect(() => {
     const storedFileType = sessionStorage.getItem("fileType");
     if (storedFileType) {
       setFileType(storedFileType);
@@ -111,10 +117,28 @@ function FileSelection({
     sessionStorage.setItem("fileType", fileType);
   }, [fileType, csvFiles, imageFiles]);
 
+  // In your initial useEffect, load the fileType's selection based on the stored file type:
+  useEffect(() => {
+    const storedFileType = sessionStorage.getItem("fileType");
+    if (storedFileType) {
+      setFileType(storedFileType);
+      const storedSelected = sessionStorage.getItem(
+        `selectedFileName_${storedFileType}`
+      );
+      if (storedSelected) {
+        setSelectedFileName(storedSelected);
+        setFileSource("combo");
+      }
+    }
+    fetchFiles();
+  }, []);
+
+  // When the user changes file selection from the combo box:
   const handleComboChange = (e) => {
     const filename = e.target.value;
     setSelectedFileName(filename);
-    sessionStorage.setItem("selectedFileName", filename);
+    // Save the selection keyed by the current file type
+    sessionStorage.setItem(`selectedFileName_${fileType}`, filename);
     setFileSource("combo");
 
     if (!filename) {
@@ -124,14 +148,11 @@ function FileSelection({
       return;
     }
 
-    // For neuralnetwork mode do not call files/select here;
-    // just update the selection.
     if (activeModel === "neuralnetwork") {
       setSelectedFile({ name: filename });
       return;
     }
-
-    // For xgboost mode, use the existing POST endpoint
+    // For xgboost mode, use the existing endpoint...
     fetch(`${url}/data/select`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -151,13 +172,7 @@ function FileSelection({
       .catch((err) => console.error(err));
   };
 
-  const handleClick = () => {
-    const fileInput = document.getElementById("fileInput");
-    fileInput.accept = fileType === "csv" ? ".csv" : "image/*";
-    fileInput.click();
-  };
-
-  // When a file is selected from the system
+  // When a file is selected from the system:
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -172,16 +187,12 @@ function FileSelection({
         return;
       }
 
-      // Clear previous combo selection
-      setSelectedFileName("");
-      sessionStorage.removeItem("selectedFileName");
+      // Save file name keyed by fileType so it can be restored later
+      setSelectedFileName(file.name);
+      sessionStorage.setItem(`selectedFileName_${fileType}`, file.name);
       setFilePreview([]);
       setImagePreview(null);
-      setSelectedFile(null);
-      // Mark file source as system
       setFileSource("system");
-
-      // Set preview locally without uploading yet
       setSelectedFile(file);
 
       if (fileType === "csv") {
@@ -193,7 +204,6 @@ function FileSelection({
         };
         reader.readAsText(file);
       } else {
-        // Preview image
         const reader = new FileReader();
         reader.onload = (evt) => {
           setImagePreview(evt.target.result);
@@ -201,6 +211,33 @@ function FileSelection({
         reader.readAsDataURL(file);
       }
     }
+  };
+
+  // When toggling between CSV and image modes, save the existing selection and load the new one:
+  const toggleFileType = (type) => {
+    // Save current selection under current fileType key
+    sessionStorage.setItem(`selectedFileName_${fileType}`, selectedFileName);
+
+    // Switch file type
+    setFileType(type);
+    // Clear current selection so the combo box resets
+    setSelectedFileName("");
+    setSelectedFile(null);
+    setFilePreview([]);
+    setImagePreview(null);
+
+    // Load selection for new file type if it exists
+    const storedSelected = sessionStorage.getItem(`selectedFileName_${type}`);
+    if (storedSelected) {
+      setSelectedFileName(storedSelected);
+      setFileSource("combo");
+    }
+  };
+
+  const handleClick = () => {
+    const fileInput = document.getElementById("fileInput");
+    fileInput.accept = fileType === "csv" ? ".csv" : "image/*";
+    fileInput.click();
   };
 
   // The button now conditionally uploads the file if selected from system,
@@ -341,15 +378,6 @@ function FileSelection({
     }
   };
 
-  const toggleFileType = (type) => {
-    setFileType(type);
-    // Reset selection when toggling file type
-    setSelectedFileName("");
-    setSelectedFile(null);
-    setFilePreview([]);
-    setImagePreview(null);
-  };
-
   return (
     <div className="file-selection-container">
       <div className="file-selection">
@@ -428,7 +456,7 @@ function FileSelection({
           </>
         )}
 
-        {selectedFile && <p>Selected file: {selectedFile.name}</p>}
+        {selectedFileName && <p>Selected file: {selectedFileName}</p>}
         <div className="file-selection-actions">
           <button
             type="button"
