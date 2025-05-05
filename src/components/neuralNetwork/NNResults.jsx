@@ -125,6 +125,41 @@ function NNResults({ selectedFile, modelType }) {
     }));
   };
 
+  // Filter images to only show those from current folds
+  const filterCurrentFoldImages = (images, metrics) => {
+    // If we don't have fold data, return all images
+    if (!hasEntries(metrics.fold_accuracies)) {
+      return images;
+    }
+
+    // Get current fold numbers from the fold_accuracies object
+    const currentFolds = Object.keys(metrics.fold_accuracies)
+      .map((key) => key.replace("fold_", ""))
+      .map(Number);
+
+    // Maximum fold number in current run
+    const maxCurrentFold = Math.max(...currentFolds);
+
+    // Filter images to only include those from current folds
+    const filteredImages = {};
+    Object.entries(images).forEach(([key, value]) => {
+      // Extract fold number from the image key (assuming keys contain "fold_X" or similar pattern)
+      const foldMatch = key.match(/fold[_-]?(\d+)/i);
+      if (foldMatch) {
+        const foldNum = parseInt(foldMatch[1], 10);
+        // Only include images from folds that are part of current run
+        if (foldNum <= maxCurrentFold) {
+          filteredImages[key] = value;
+        }
+      } else {
+        // If no fold number in key, include it (might be a summary image)
+        filteredImages[key] = value;
+      }
+    });
+
+    return filteredImages;
+  };
+
   return (
     <div className="nn-results-container">
       <h2>Testing</h2>
@@ -309,7 +344,7 @@ function NNResults({ selectedFile, modelType }) {
 
       {Object.keys(resultsImages).length > 0 && (
         <ResultsImagesGrid
-          resultsImages={resultsImages}
+          resultsImages={filterCurrentFoldImages(resultsImages, metrics)}
           setModalImage={setModalImage}
         />
       )}
