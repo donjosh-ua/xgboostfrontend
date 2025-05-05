@@ -13,9 +13,9 @@ function NNResults({ selectedFile, modelType }) {
   const [modalImage, setModalImage] = useState(null);
   // Add state to track which sections are expanded
   const [expandedSections, setExpandedSections] = useState({
-    overall: true,
-    image: true,
-    folds: true,
+    overall: false,
+    image: false,
+    folds: false,
     foldAccuracies: true,
   });
   const url = import.meta.env.VITE_BNN_URL;
