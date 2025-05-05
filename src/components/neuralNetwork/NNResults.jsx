@@ -177,28 +177,42 @@ function NNResults({ selectedFile, modelType }) {
                 </div>
                 {expandedSections.foldAccuracies && (
                   <div className="fold-accuracies">
-                    {Object.entries(metrics.fold_accuracies).map(
-                      ([foldName, accuracy]) => (
-                        <div key={foldName} className="fold-accuracy-item">
-                          <span className="fold-name">
-                            {foldName.replace("fold_", "Fold ")}:
-                          </span>
-                          <span className="fold-value">
-                            <strong>{accuracy.toFixed(2)}%</strong>
-                          </span>
-                          <div
-                            className="accuracy-bar"
-                            style={{
-                              width: `${accuracy}%`,
-                              backgroundColor: `hsl(${Math.min(
-                                120,
-                                accuracy
-                              )}deg, 70%, 50%)`,
-                            }}
-                          />
-                        </div>
-                      )
-                    )}
+                    {(() => {
+                      // Find the highest accuracy
+                      const accuracies = Object.values(metrics.fold_accuracies);
+                      const highestAccuracy = Math.max(...accuracies);
+
+                      return Object.entries(metrics.fold_accuracies).map(
+                        ([foldName, accuracy]) => (
+                          <div key={foldName} className="fold-accuracy-item">
+                            <span className="fold-name">
+                              {foldName.replace("fold_", "Fold ")}:
+                            </span>
+                            <span
+                              className="fold-value"
+                              style={{
+                                color:
+                                  accuracy === highestAccuracy
+                                    ? "#4caf50"
+                                    : "#333",
+                              }}
+                            >
+                              <strong>{accuracy.toFixed(2)}%</strong>
+                            </span>
+                            <div
+                              className="accuracy-bar"
+                              style={{
+                                width: `${accuracy}%`,
+                                backgroundColor: `hsl(${Math.min(
+                                  120,
+                                  accuracy
+                                )}deg, 70%, 50%)`,
+                              }}
+                            />
+                          </div>
+                        )
+                      );
+                    })()}
                   </div>
                 )}
               </div>

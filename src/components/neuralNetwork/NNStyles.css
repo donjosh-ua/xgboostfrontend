@@ -1149,8 +1149,3 @@ input:checked + .slider:before {
   margin-top: 5px;
   transition: width 0.5s ease-in-out;
 }
-
-/* Add some emphasis to the highest fold accuracy */
-.fold-accuracy-item:first-child .fold-value strong {
-  color: #2e7d32;
-}
