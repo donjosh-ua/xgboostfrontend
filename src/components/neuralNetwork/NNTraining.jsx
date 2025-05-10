@@ -9,6 +9,7 @@ function NNTraining({
   nnTrainingValues,
   setNNTrainingValues,
   activeModel,
+  setWasTrainedWithCV,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [trainMessage, setTrainMessage] = useState("");
@@ -59,6 +60,8 @@ function NNTraining({
     setIsLoading(true);
     sessionStorage.setItem("nnTrainingLoading", "true");
     setTrainMessage("");
+
+    setWasTrainedWithCV(nnTrainingValues.useCrossValidation);
 
     try {
       // Ensure activeModel comparison is case-insensitive

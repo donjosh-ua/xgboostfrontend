@@ -5,13 +5,16 @@ import MetricsCard from "../metricsCard/MetricsCard";
 import ResultsImagesGrid from "./ResultsImagesGrid";
 import "./NNStyles.css";
 
-function NNResults({ selectedFile, modelType }) {
+function NNResults({ selectedFile, modelType, wasTrainedWithCV }) {
   const [toastMessage, setToastMessage] = useState("");
   const [isTesting, setIsTesting] = useState(false);
   const [resultsImages, setResultsImages] = useState({});
   const [metrics, setMetrics] = useState({});
   const [modalImage, setModalImage] = useState(null);
-  // Add state to track which sections are expanded
+  const [localWasTrainedWithCV, setLocalWasTrainedWithCV] = useState(
+    // Initialize from localStorage or prop (localStorage takes precedence)
+    localStorage.getItem("wasTrainedWithCV") === "true" || wasTrainedWithCV
+  );
   const [expandedSections, setExpandedSections] = useState({
     overall: false,
     image: false,
@@ -20,9 +23,20 @@ function NNResults({ selectedFile, modelType }) {
   });
   const url = import.meta.env.VITE_BNN_URL;
 
+  // Use useEffect to update localStorage when localWasTrainedWithCV changes
+  useEffect(() => {
+    localStorage.setItem("wasTrainedWithCV", localWasTrainedWithCV.toString());
+  }, [localWasTrainedWithCV]);
+
   useEffect(() => {
     const cachedImages = localStorage.getItem("nnResultsImages");
     const cachedMetrics = localStorage.getItem("nnResultsMetrics");
+    const storedWasTrainedWithCV = localStorage.getItem("wasTrainedWithCV");
+
+    if (storedWasTrainedWithCV !== null) {
+      setLocalWasTrainedWithCV(storedWasTrainedWithCV === "true");
+    }
+
     if (cachedImages) {
       setResultsImages(JSON.parse(cachedImages));
     }
@@ -33,6 +47,18 @@ function NNResults({ selectedFile, modelType }) {
       setIsTesting(true);
     }
   }, []);
+
+  // Only update localWasTrainedWithCV from props when there's an explicit change
+  // and when this is a new training session
+  useEffect(() => {
+    if (
+      wasTrainedWithCV !== undefined &&
+      localStorage.getItem("wasTrainedWithCV") !== wasTrainedWithCV.toString()
+    ) {
+      setLocalWasTrainedWithCV(wasTrainedWithCV);
+      localStorage.setItem("wasTrainedWithCV", wasTrainedWithCV.toString());
+    }
+  }, [wasTrainedWithCV]);
 
   // Persist metrics to localStorage whenever they change
   useEffect(() => {
@@ -45,6 +71,8 @@ function NNResults({ selectedFile, modelType }) {
   }, [resultsImages]);
 
   const handleTestRun = () => {
+    localStorage.setItem("wasTrainedWithCV", wasTrainedWithCV.toString());
+    setLocalWasTrainedWithCV(wasTrainedWithCV);
     setIsTesting(true);
     sessionStorage.setItem("nnResultsTesting", "true");
     setToastMessage("");
@@ -91,6 +119,8 @@ function NNResults({ selectedFile, modelType }) {
           })
         );
 
+        localStorage.setItem("wasTrainedWithCV", wasTrainedWithCV.toString());
+
         if (data.images && typeof data.images === "object") {
           setResultsImages(data.images);
           localStorage.setItem("nnResultsImages", JSON.stringify(data.images));
@@ -125,9 +155,21 @@ function NNResults({ selectedFile, modelType }) {
     }));
   };
 
-  // Filter images to only show those from current folds
+  // Filter images to only show those relevant to current training mode
   const filterCurrentFoldImages = (images, metrics) => {
-    // If we don't have fold data, return all images
+    // If not trained with CV, exclude all fold-related images
+    if (!localWasTrainedWithCV) {
+      const filteredImages = {};
+      Object.entries(images).forEach(([key, value]) => {
+        // Only include images that don't have fold-related names
+        if (!key.match(/fold[_-]?(\d+)/i) && !key.includes("cv_")) {
+          filteredImages[key] = value;
+        }
+      });
+      return filteredImages;
+    }
+
+    // If we're using CV but don't have fold data, return all images
     if (!hasEntries(metrics.fold_accuracies)) {
       return images;
     }
@@ -197,7 +239,7 @@ function NNResults({ selectedFile, modelType }) {
           {/* Display frequency data separately */}
           <div className="frequency-section">
             {/* Fold Accuracies Section */}
-            {hasEntries(metrics.fold_accuracies) && (
+            {localWasTrainedWithCV && hasEntries(metrics.fold_accuracies) && (
               <div className="accuracy-section collapsible-section">
                 <div
                   className="section-header"
@@ -306,7 +348,7 @@ function NNResults({ selectedFile, modelType }) {
             )}
 
             {/* Display cross-validation fold data */}
-            {hasEntries(metrics.class_frequency) && (
+            {localWasTrainedWithCV && hasEntries(metrics.class_frequency) && (
               <div className="frequency-text cv-folds collapsible-section">
                 <div
                   className="section-header"
@@ -340,6 +382,14 @@ function NNResults({ selectedFile, modelType }) {
             )}
           </div>
         </>
+      )}
+
+      {metrics && Object.keys(metrics).length > 0 && (
+        <div className="nn-training-method-info">
+          <span className="training-method-badge">
+            Trained with cv: {wasTrainedWithCV ? "Yes" : "No"}
+          </span>
+        </div>
       )}
 
       {Object.keys(resultsImages).length > 0 && (

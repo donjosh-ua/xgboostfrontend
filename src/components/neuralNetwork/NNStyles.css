@@ -1149,3 +1149,18 @@ input:checked + .slider:before {
   margin-top: 5px;
   transition: width 0.5s ease-in-out;
 }
+
+.nn-training-method-info {
+  margin: 10px 0;
+  text-align: center;
+}
+
+.training-method-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: var(--secondary-color);
+  color: white;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}

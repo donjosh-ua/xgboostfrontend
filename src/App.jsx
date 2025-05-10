@@ -11,6 +11,7 @@ import "./App.css";
 
 function App() {
   const [activeStep, setActiveStep] = useState(0);
+  const [wasTrainedWithCV, setWasTrainedWithCV] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState([]);
   const [hasHeader, setHasHeader] = useState(false);
@@ -206,12 +207,14 @@ function App() {
                   nnTrainingValues={nnTrainingValues}
                   setNNTrainingValues={setNNTrainingValues}
                   activeModel={activeModel}
+                  setWasTrainedWithCV={setWasTrainedWithCV}
                 />
               )}
               {activeStep === 3 && (
                 <NNResults
                   selectedFile={selectedFile}
                   modelType="neuralnetwork"
+                  wasTrainedWithCV={wasTrainedWithCV}
                 />
               )}
             </>
