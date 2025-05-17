@@ -71,11 +71,21 @@ function NNResults({ selectedFile, modelType, wasTrainedWithCV }) {
   }, [resultsImages]);
 
   const handleTestRun = () => {
+    // Update localStorage with current training mode
     localStorage.setItem("wasTrainedWithCV", wasTrainedWithCV.toString());
+    // Update local state
     setLocalWasTrainedWithCV(wasTrainedWithCV);
+
+    // Clear previous results before testing
+    setMetrics({});
+    setResultsImages({});
+    localStorage.removeItem("nnResultsImages");
+    localStorage.removeItem("nnResultsMetrics");
+
     setIsTesting(true);
     sessionStorage.setItem("nnResultsTesting", "true");
     setToastMessage("");
+
     fetch(`${url}/train/results`, {
       method: "GET",
     })
@@ -155,10 +165,11 @@ function NNResults({ selectedFile, modelType, wasTrainedWithCV }) {
     }));
   };
 
-  // Filter images to only show those relevant to current training mode
   const filterCurrentFoldImages = (images, metrics) => {
-    // If not trained with CV, exclude all fold-related images
-    if (!localWasTrainedWithCV) {
+    // Always use wasTrainedWithCV from props for consistency with current training mode
+    // This ensures when you train with a new mode, we respect that mode
+    if (!wasTrainedWithCV) {
+      // When NOT trained with CV, filter out all CV-related images
       const filteredImages = {};
       Object.entries(images).forEach(([key, value]) => {
         // Only include images that don't have fold-related names
@@ -167,39 +178,21 @@ function NNResults({ selectedFile, modelType, wasTrainedWithCV }) {
         }
       });
       return filteredImages;
-    }
-
-    // If we're using CV but don't have fold data, return all images
-    if (!hasEntries(metrics.fold_accuracies)) {
-      return images;
-    }
-
-    // Get current fold numbers from the fold_accuracies object
-    const currentFolds = Object.keys(metrics.fold_accuracies)
-      .map((key) => key.replace("fold_", ""))
-      .map(Number);
-
-    // Maximum fold number in current run
-    const maxCurrentFold = Math.max(...currentFolds);
-
-    // Filter images to only include those from current folds
-    const filteredImages = {};
-    Object.entries(images).forEach(([key, value]) => {
-      // Extract fold number from the image key (assuming keys contain "fold_X" or similar pattern)
-      const foldMatch = key.match(/fold[_-]?(\d+)/i);
-      if (foldMatch) {
-        const foldNum = parseInt(foldMatch[1], 10);
-        // Only include images from folds that are part of current run
-        if (foldNum <= maxCurrentFold) {
+    } else {
+      // When trained with CV, we want to show all CV-related images
+      // but we should still filter in case there are old non-CV images
+      const filteredImages = {};
+      Object.entries(images).forEach(([key, value]) => {
+        if (
+          key.match(/fold[_-]?(\d+)/i) ||
+          key.includes("cv_") ||
+          !key.match(/(split|test)[_-]?/i)
+        ) {
           filteredImages[key] = value;
         }
-      } else {
-        // If no fold number in key, include it (might be a summary image)
-        filteredImages[key] = value;
-      }
-    });
-
-    return filteredImages;
+      });
+      return filteredImages;
+    }
   };
 
   return (
@@ -387,7 +380,7 @@ function NNResults({ selectedFile, modelType, wasTrainedWithCV }) {
       {metrics && Object.keys(metrics).length > 0 && (
         <div className="nn-training-method-info">
           <span className="training-method-badge">
-            Trained with cv: {wasTrainedWithCV ? "Yes" : "No"}
+            Trained with CV: {wasTrainedWithCV ? "Yes" : "No"}
           </span>
         </div>
       )}
