@@ -7,6 +7,7 @@ import NNTunning from "./components/neuralNetwork/NNTunning";
 import NNTraining from "./components/neuralNetwork/NNTraining";
 import NNResults from "./components/neuralNetwork/NNResults";
 import ModelToggle from "./components/ModelToggle";
+import LogoBar from "./components/logobar/LogoBar";
 import "./App.css";
 
 function App() {
@@ -150,6 +151,8 @@ function App() {
             </ul>
           </nav>
         </header>
+
+        <LogoBar />
 
         <main>
           {activeStep === 0 && (

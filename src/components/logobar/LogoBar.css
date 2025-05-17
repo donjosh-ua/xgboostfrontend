@@ -1,0 +1,36 @@
+.logo-bar {
+  width: 100%;
+  padding: 10px 20px;
+  background-color: var(--background-color);
+  display: flex;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.organization-logo {
+  height: 40px;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .logo-bar {
+    padding: 8px 12px;
+  }
+
+  .organization-logo {
+    height: 30px;
+    max-width: 100px;
+  }
+
+  .logo-container {
+    gap: 12px;
+  }
+}
