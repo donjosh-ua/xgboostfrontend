@@ -73,7 +73,7 @@ function NNTraining({
           epoch: Number(nnTrainingValues.epochs) || 20,
           criteria: nnParams.criteria || "cross_entropy",
           optimizer: nnTrainingValues.optimizer || "SGD",
-          image_size: Number(nnParams.image_size) || 0,
+          image_size: Number(nnParams.image_size || 0),
           verbose: Boolean(nnParams.verbose),
           decay: Number(nnParams.decay || 0),
           momentum: Number(nnParams.momentum || 0.9),
@@ -90,6 +90,49 @@ function NNTraining({
             : 0,
           layers: nnParams.layers || [],
         };
+
+        // Handle Bayesian parameters as a separate object for clarity
+        if (nnTrainingValues.useBayesian) {
+          // Create a dedicated bayesian config object
+          bnnParams.bayesian_config = {
+            distribution_type: nnTrainingValues.distribution || "normal",
+          };
+
+          // Add specific parameters based on distribution type
+          switch (nnTrainingValues.distribution) {
+            case "normal":
+              bnnParams.bayesian_config.mean = Number(
+                nnTrainingValues.distributionParams?.mean || 0
+              );
+              bnnParams.bayesian_config.sigma = Number(
+                nnTrainingValues.distributionParams?.sigma || 1
+              );
+              break;
+            case "halfnormal":
+              bnnParams.bayesian_config.sigma = Number(
+                nnTrainingValues.distributionParams?.sigma || 1
+              );
+              break;
+            case "cauchy":
+              bnnParams.bayesian_config.alpha = Number(
+                nnTrainingValues.distributionParams?.alpha || 0
+              );
+              bnnParams.bayesian_config.beta = Number(
+                nnTrainingValues.distributionParams?.beta || 1
+              );
+              break;
+            case "exponential":
+              bnnParams.bayesian_config.lambda = Number(
+                nnTrainingValues.distributionParams?.lambda || 1
+              );
+              break;
+            default:
+              // Default to normal with standard parameters
+              bnnParams.bayesian_config.distribution_type = "normal";
+              bnnParams.bayesian_config.mean = 0;
+              bnnParams.bayesian_config.sigma = 1;
+          }
+        }
 
         console.log("Sending BNN training parameters:", bnnParams);
 
