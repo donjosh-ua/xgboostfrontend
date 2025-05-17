@@ -19,8 +19,8 @@ const DEFAULT_INPUT_LAYER = {
 
 const DEFAULT_OUTPUT_LAYER = {
   neurons: "1",
-  activation: "Sigmoid",
   input_neurons: "3",
+  activation: "Softmax",
 };
 
 const DEFAULT_HIDDEN_LAYER = {
