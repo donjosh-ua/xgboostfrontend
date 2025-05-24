@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Toast from "../toast/Toast";

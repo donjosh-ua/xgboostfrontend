@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { FaSpinner } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaSpinner, FaDownload } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import "./ResultsStyles.css";
 
-function Results({ modelType = "xgboost" }) {
+function Results() {
   const [toastMessage, setToastMessage] = useState("");
   const [isTesting, setIsTesting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [resultsImages, setResultsImages] = useState({});
   const [modalImage, setModalImage] = useState(null);
   const url = import.meta.env.VITE_XGB_URL;
@@ -55,6 +56,50 @@ function Results({ modelType = "xgboost" }) {
       });
   };
 
+  const handleDownload = (modelType) => {
+    setIsDownloading(true);
+
+    fetch(`${url}/test/download/${modelType}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.statusText}`);
+        }
+        return response.blob();
+      })
+      .then((blob) => {
+        // Create a URL for the blob
+        const downloadUrl = window.URL.createObjectURL(blob);
+
+        // Create a temporary link element
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = `xgboost_${modelType}_model.xgb`;
+
+        // Append to the document, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up the URL object
+        window.URL.revokeObjectURL(downloadUrl);
+
+        setToastMessage(
+          `${
+            modelType.charAt(0).toUpperCase() + modelType.slice(1)
+          } model downloaded successfully!`
+        );
+      })
+      .catch((error) => {
+        console.error("Download error:", error);
+        setToastMessage(
+          `Error downloading ${modelType} model. It may not exist yet.`
+        );
+      })
+      .finally(() => {
+        setIsDownloading(false);
+      });
+  };
+
   return (
     <div className="results-container">
       <h2>Testing</h2>
@@ -68,6 +113,27 @@ function Results({ modelType = "xgboost" }) {
           "Test Model"
         )}
       </button>
+
+      <div className="download-section">
+        <h3>Download Models</h3>
+        <div className="download-buttons">
+          <button
+            onClick={() => handleDownload("normal")}
+            disabled={isDownloading}
+            className="download-button"
+          >
+            <FaDownload /> Normal Model
+          </button>
+          <button
+            onClick={() => handleDownload("custom")}
+            disabled={isDownloading}
+            className="download-button"
+          >
+            <FaDownload /> Custom Model
+          </button>
+        </div>
+      </div>
+
       {toastMessage && (
         <Toast message={toastMessage} onClose={() => setToastMessage("")} />
       )}

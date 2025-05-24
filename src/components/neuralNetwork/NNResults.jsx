@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { FaSpinner, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import {
+  FaSpinner,
+  FaChevronDown,
+  FaChevronUp,
+  FaDownload,
+} from "react-icons/fa";
 import Toast from "../toast/Toast";
 import MetricsCard from "../metricsCard/MetricsCard";
 import ResultsImagesGrid from "./ResultsImagesGrid";
 import "./NNStyles.css";
 
-function NNResults({ selectedFile, modelType, wasTrainedWithCV }) {
+function NNResults({ wasTrainedWithCV }) {
   const [toastMessage, setToastMessage] = useState("");
   const [isTesting, setIsTesting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [resultsImages, setResultsImages] = useState({});
   const [metrics, setMetrics] = useState({});
   const [modalImage, setModalImage] = useState(null);
@@ -69,6 +75,44 @@ function NNResults({ selectedFile, modelType, wasTrainedWithCV }) {
   useEffect(() => {
     localStorage.setItem("nnResultsImages", JSON.stringify(resultsImages));
   }, [resultsImages]);
+
+  const handleDownload = () => {
+    setIsDownloading(true);
+
+    fetch(`${url}/train/download`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.statusText}`);
+        }
+        return response.blob();
+      })
+      .then((blob) => {
+        // Create a URL for the blob
+        const downloadUrl = window.URL.createObjectURL(blob);
+
+        // Create a temporary link element
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = "best_neural_network_model.pth";
+
+        // Append to the document, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up the URL object
+        window.URL.revokeObjectURL(downloadUrl);
+
+        setToastMessage("Best model downloaded successfully!");
+      })
+      .catch((error) => {
+        console.error("Download error:", error);
+        setToastMessage("Error downloading model. It may not exist yet.");
+      })
+      .finally(() => {
+        setIsDownloading(false);
+      });
+  };
 
   const handleTestRun = () => {
     // Update localStorage with current training mode
@@ -213,6 +257,25 @@ function NNResults({ selectedFile, modelType, wasTrainedWithCV }) {
           "Test Model"
         )}
       </button>
+
+      <div className="download-section">
+        <h3>Download Best Model</h3>
+        <button
+          onClick={handleDownload}
+          disabled={isDownloading}
+          className="download-button"
+        >
+          {isDownloading ? (
+            <>
+              <FaSpinner className="loadingIcon" /> Downloading...
+            </>
+          ) : (
+            <>
+              <FaDownload /> Download Model
+            </>
+          )}
+        </button>
+      </div>
 
       {toastMessage && (
         <Toast message={toastMessage} onClose={() => setToastMessage("")} />

@@ -3,7 +3,7 @@
 }
 
 .result-image {
-    color: black;
+  color: black;
   border: 1px solid var(--border-color);
   padding: 10px;
   text-align: center;
@@ -67,5 +67,46 @@
 
   .results-images {
     grid-template-columns: 1fr;
+  }
+}
+
+.download-section {
+  margin-top: 30px;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.download-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.download-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 150px;
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.download-button:hover {
+  background-color: var(--primary-color);
+}
+
+@media (max-width: 600px) {
+  .download-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .download-button {
+    width: 80%;
+    max-width: 200px;
   }
 }
