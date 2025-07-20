@@ -11,7 +11,7 @@ function MetricsCard({ metrics }) {
             <h4>{key.replace(/_/g, " ").toUpperCase()}</h4>
             <div className="metric-value">
               {key === "epoch"
-                ? parseInt(value)
+                ? parseInt(value) + 1
                 : typeof value === "number"
                 ? value.toFixed(4)
                 : value}

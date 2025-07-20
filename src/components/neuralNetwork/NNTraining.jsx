@@ -114,7 +114,7 @@ function NNTraining({
               );
               break;
             case "cauchy":
-              bnnParams.bayesian_config.alpha = Number(
+              bnnParams.bayesian_config.bayesian_alpha = Number(
                 nnTrainingValues.distributionParams?.alpha || 0
               );
               bnnParams.bayesian_config.beta = Number(
@@ -124,6 +124,51 @@ function NNTraining({
             case "exponential":
               bnnParams.bayesian_config.lambda = Number(
                 nnTrainingValues.distributionParams?.lambda || 1
+              );
+              break;
+            case "uniform":
+              bnnParams.bayesian_config.low = Number(
+                nnTrainingValues.distributionParams?.low || 0
+              );
+              bnnParams.bayesian_config.high = Number(
+                nnTrainingValues.distributionParams?.high || 1
+              );
+              break;
+            case "dirichlet":
+              bnnParams.bayesian_config.a_dirichlet = Number(
+                nnTrainingValues.distributionParams?.a_dirichlet || 1
+              );
+              break;
+            case "multinomial":
+              bnnParams.bayesian_config.n_multinomial = Number(
+                nnTrainingValues.distributionParams?.n_multinomial || 1
+              );
+              bnnParams.bayesian_config.p_multinomial = Number(
+                nnTrainingValues.distributionParams?.p_multinomial || 0.5
+              );
+              break;
+            case "beta":
+              bnnParams.bayesian_config.alpha_beta = Number(
+                nnTrainingValues.distributionParams?.alpha_beta || 1
+              );
+              bnnParams.bayesian_config.beta_beta = Number(
+                nnTrainingValues.distributionParams?.beta_beta || 1
+              );
+              break;
+            case "binomial":
+              bnnParams.bayesian_config.n = Number(
+                nnTrainingValues.distributionParams?.n || 1
+              );
+              bnnParams.bayesian_config.p = Number(
+                nnTrainingValues.distributionParams?.p || 0.5
+              );
+              break;
+            case "gamma":
+              bnnParams.bayesian_config.gamma_alpha = Number(
+                nnTrainingValues.distributionParams?.gamma_alpha || 1
+              );
+              bnnParams.bayesian_config.gamma_beta = Number(
+                nnTrainingValues.distributionParams?.gamma_beta || 1
               );
               break;
             default:
@@ -337,6 +382,12 @@ function NNTraining({
                       <option value="halfnormal">Half Normal</option>
                       <option value="cauchy">Cauchy</option>
                       <option value="exponential">Exponential</option>
+                      <option value="uniform">Uniform</option>
+                      <option value="dirichlet">Dirichlet</option>
+                      <option value="multinomial">Multinomial</option>
+                      <option value="binomial">Binomial</option>
+                      <option value="beta">Beta</option>
+                      <option value="gamma">Gamma</option>
                     </select>
                   </td>
                 </tr>
@@ -477,6 +528,260 @@ function NNTraining({
                         />
                       </td>
                     </tr>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "uniform" && (
+                    <>
+                      <tr>
+                        <td>Lower Bound:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.low || "0"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                low: e.target.value,
+                              })
+                            }
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Upper Bound:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.high || "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                high: e.target.value,
+                              })
+                            }
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "dirichlet" && (
+                    <tr>
+                      <td>a:</td>
+                      <td>
+                        <input
+                          type="number"
+                          value={
+                            nnTrainingValues.distributionParams?.a_dirichlet ||
+                            "1"
+                          }
+                          onChange={(e) =>
+                            handleChange("distributionParams", {
+                              ...nnTrainingValues.distributionParams,
+                              a_dirichlet: e.target.value,
+                            })
+                          }
+                          step="0.1"
+                          disabled={isLoading}
+                        />
+                      </td>
+                    </tr>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "multinomial" && (
+                    <>
+                      <tr>
+                        <td>n:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams
+                                ?.n_multinomial || "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                n_multinomial: e.target.value,
+                              })
+                            }
+                            step="1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>p:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams
+                                ?.p_multinomial || "0.5"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                p_multinomial: e.target.value,
+                              })
+                            }
+                            step="0.01"
+                            min="0"
+                            max="1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "beta" && (
+                    <>
+                      <tr>
+                        <td>Alpha:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.alpha_beta ||
+                              "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                alpha_beta: e.target.value,
+                              })
+                            }
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Beta:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.beta_beta ||
+                              "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                beta_beta: e.target.value,
+                              })
+                            }
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "binomial" && (
+                    <>
+                      <tr>
+                        <td>n:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.n || "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                n: e.target.value,
+                              })
+                            }
+                            step="1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>p:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.p || "0.5"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                p: e.target.value,
+                              })
+                            }
+                            step="0.01"
+                            min="0"
+                            max="1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                    </>
+                  )}
+
+                {nnTrainingValues.useBayesian &&
+                  nnTrainingValues.distribution === "gamma" && (
+                    <>
+                      <tr>
+                        <td>Alpha:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams
+                                ?.gamma_alpha || "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                gamma_alpha: e.target.value,
+                              })
+                            }
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Beta:</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={
+                              nnTrainingValues.distributionParams?.gamma_beta ||
+                              "1"
+                            }
+                            onChange={(e) =>
+                              handleChange("distributionParams", {
+                                ...nnTrainingValues.distributionParams,
+                                gamma_beta: e.target.value,
+                              })
+                            }
+                            step="0.1"
+                            disabled={isLoading}
+                          />
+                        </td>
+                      </tr>
+                    </>
                   )}
               </tbody>
             </table>
