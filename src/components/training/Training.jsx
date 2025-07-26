@@ -640,6 +640,7 @@ function Training({
                   <input
                     type="string"
                     name="alpha_vector"
+                    placeholder="0.2, 0.5"
                     value={trainingValues.distributionParams.alpha_vector}
                     onChange={handleDistributionParamChange}
                     disabled={isLoading}
@@ -655,6 +656,7 @@ function Training({
                     <input
                       type="string"
                       name="alpha_vector"
+                      placeholder="0.2, 0.5"
                       value={trainingValues.distributionParams.alpha_vector}
                       onChange={handleDistributionParamChange}
                       disabled={isLoading}
@@ -695,6 +697,7 @@ function Training({
                     <input
                       type="string"
                       name="p_vector"
+                      placeholder="0.2, 0.5, 0.3"
                       value={trainingValues.distributionParams.p_vector}
                       onChange={handleDistributionParamChange}
                       disabled={isLoading}
@@ -711,6 +714,7 @@ function Training({
                     <input
                       type="string"
                       name="weights"
+                      placeholder="0.2, 0.5"
                       value={trainingValues.distributionParams.weights}
                       onChange={handleDistributionParamChange}
                       disabled={isLoading}
@@ -723,6 +727,7 @@ function Training({
                     <input
                       type="string"
                       name="means"
+                      placeholder="0.2, 0.5"
                       value={trainingValues.distributionParams.means}
                       onChange={handleDistributionParamChange}
                       disabled={isLoading}
@@ -735,6 +740,7 @@ function Training({
                     <input
                       type="string"
                       name="sigmas"
+                      placeholder="0.2, 0.5"
                       value={trainingValues.distributionParams.sigmas}
                       onChange={handleDistributionParamChange}
                       disabled={isLoading}

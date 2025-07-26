@@ -125,32 +125,30 @@ function NNTraining({
             distribution_type: nnTrainingValues.distribution || "normal",
             ...parsedParams,
           };
-
-          console.log("Sending BNN training parameters:", bnnParams);
-
-          const res = await fetch(`${url}/train/normal`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(bnnParams),
-          });
-
-          if (!res.ok) {
-            const text = await res.text();
-            throw new Error(
-              text || `Training failed with status ${res.status}`
-            );
-          }
-
-          const data = await res.json();
-          console.log("Train response (BNN):", data);
-          setTrainMessage("Neural network trained successfully!");
-        } else {
-          // Fallback for non-BNN mode (currently not implemented)
-          console.log("Non-neuralnetwork training triggered");
-          setTrainMessage(
-            "Training for non-neuralnetwork mode is not implemented yet."
-          );
         }
+
+        console.log("Sending BNN training parameters:", bnnParams);
+
+        const res = await fetch(`${url}/train/normal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bnnParams),
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `Training failed with status ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log("Train response (BNN):", data);
+        setTrainMessage("Neural network trained successfully!");
+      } else {
+        // Fallback for non-BNN mode (currently not implemented)
+        console.log("Non-neuralnetwork training triggered");
+        setTrainMessage(
+          "Training for non-neuralnetwork mode is not implemented yet."
+        );
       }
     } catch (err) {
       console.error("Training error:", err);
@@ -234,6 +232,12 @@ function NNTraining({
           <h3>Training Options</h3>
           <div className="table-container">
             <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr>
                   <td>Batch Size:</td>
@@ -302,6 +306,12 @@ function NNTraining({
           <h3>Bayesian Configuration</h3>
           <div className="table-container">
             <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr>
                   <td>Use Bayesian:</td>
@@ -376,7 +386,7 @@ function NNTraining({
                 {nnTrainingValues.useBayesian &&
                   nnTrainingValues.distribution === "halfnormal" && (
                     <tr>
-                      <td>Sigma (σ):</td>
+                      <td>Sigma:</td>
                       <td>
                         <input
                           type="number"
@@ -401,7 +411,7 @@ function NNTraining({
                   nnTrainingValues.distribution === "cauchy" && (
                     <>
                       <tr>
-                        <td>Alpha (α):</td>
+                        <td>Alpha:</td>
                         <td>
                           <input
                             type="number"
@@ -420,7 +430,7 @@ function NNTraining({
                         </td>
                       </tr>
                       <tr>
-                        <td>Beta (β):</td>
+                        <td>Beta:</td>
                         <td>
                           <input
                             type="number"
@@ -444,7 +454,7 @@ function NNTraining({
                 {nnTrainingValues.useBayesian &&
                   nnTrainingValues.distribution === "exponential" && (
                     <tr>
-                      <td>Lambda (λ):</td>
+                      <td>Lambda:</td>
                       <td>
                         <input
                           type="number"
@@ -468,7 +478,7 @@ function NNTraining({
                   nnTrainingValues.distribution === "beta" && (
                     <>
                       <tr>
-                        <td>Alpha (α):</td>
+                        <td>Alpha:</td>
                         <td>
                           <input
                             type="number"
@@ -487,7 +497,7 @@ function NNTraining({
                         </td>
                       </tr>
                       <tr>
-                        <td>Beta (β):</td>
+                        <td>Beta:</td>
                         <td>
                           <input
                             type="number"
@@ -511,7 +521,7 @@ function NNTraining({
                 {nnTrainingValues.useBayesian &&
                   nnTrainingValues.distribution === "chisquared" && (
                     <tr>
-                      <td>Degrees of Freedom (k):</td>
+                      <td>k:</td>
                       <td>
                         <input
                           type="number"
@@ -594,7 +604,7 @@ function NNTraining({
                   nnTrainingValues.distribution === "gamma" && (
                     <>
                       <tr>
-                        <td>Alpha (α):</td>
+                        <td>Alpha:</td>
                         <td>
                           <input
                             type="number"
@@ -613,7 +623,7 @@ function NNTraining({
                         </td>
                       </tr>
                       <tr>
-                        <td>Beta (β):</td>
+                        <td>Beta:</td>
                         <td>
                           <input
                             type="number"
@@ -639,7 +649,7 @@ function NNTraining({
                   nnTrainingValues.distribution === "uniform" && (
                     <>
                       <tr>
-                        <td>Lower (a):</td>
+                        <td>Lower:</td>
                         <td>
                           <input
                             type="number"
@@ -656,7 +666,7 @@ function NNTraining({
                         </td>
                       </tr>
                       <tr>
-                        <td>Upper (b):</td>
+                        <td>Upper:</td>
                         <td>
                           <input
                             type="number"
@@ -679,7 +689,7 @@ function NNTraining({
                 {nnTrainingValues.useBayesian &&
                   nnTrainingValues.distribution === "dirichlet" && (
                     <tr>
-                      <td>Alpha (array):</td>
+                      <td>Alpha:</td>
                       <td>
                         <input
                           type="text"
@@ -705,7 +715,7 @@ function NNTraining({
                   nnTrainingValues.distribution === "multinomial" && (
                     <>
                       <tr>
-                        <td>n (number of trials):</td>
+                        <td>n:</td>
                         <td>
                           <input
                             type="number"
@@ -721,7 +731,7 @@ function NNTraining({
                         </td>
                       </tr>
                       <tr>
-                        <td>p (probabilities array):</td>
+                        <td>P Vector:</td>
                         <td>
                           <input
                             type="text"
@@ -745,7 +755,7 @@ function NNTraining({
                   nnTrainingValues.distribution === "binomial" && (
                     <>
                       <tr>
-                        <td>n (number of trials):</td>
+                        <td>n:</td>
                         <td>
                           <input
                             type="number"
@@ -761,7 +771,7 @@ function NNTraining({
                         </td>
                       </tr>
                       <tr>
-                        <td>p (probability of success):</td>
+                        <td>p:</td>
                         <td>
                           <input
                             type="number"
@@ -1087,6 +1097,7 @@ function NNTraining({
                         <td>
                           <input
                             type="text"
+                            placeholder="0.2, 0.5"
                             value={
                               nnTrainingValues.distributionParams?.weights || ""
                             }
@@ -1105,6 +1116,7 @@ function NNTraining({
                         <td>
                           <input
                             type="text"
+                            placeholder="0.2, 0.5"
                             value={
                               nnTrainingValues.distributionParams?.means || ""
                             }
@@ -1123,6 +1135,7 @@ function NNTraining({
                         <td>
                           <input
                             type="text"
+                            placeholder="0.2, 0.5"
                             value={
                               nnTrainingValues.distributionParams?.sigmas || ""
                             }
