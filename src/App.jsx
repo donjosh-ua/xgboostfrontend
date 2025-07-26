@@ -97,11 +97,30 @@ function App() {
     useBayesian: false,
     distribution: "normal",
     distributionParams: {
-      mean: "0",
-      sigma: "1",
-      alpha: "0",
-      beta: "1",
-      lambda: "1",
+      // Continuous distributions
+      mu: "0", // Normal, ExGaussian, Logistic, LogNormal, Poisson
+      sigma: "1", // Normal, HalfNormal, ExGaussian, LogNormal, GaussianRandomWalk
+      alpha: "0", // Cauchy, Beta, Gamma, Weibull, BetaBinomial
+      beta: "1", // Cauchy, Gamma, Weibull, BetaBinomial
+      lambda: "1", // Exponential
+      nu: "", // ChiSquared, ExGaussian
+      scale: "", // Logistic
+      lower: "", // Uniform
+      upper: "", // Uniform
+
+      // Discrete distributions
+      p: "", // Bernoulli, Binomial, Categorical
+      n: "", // Binomial, BetaBinomial, DirichletMultinomial, Multinomial
+      alpha_vector: "", // Dirichlet, DirichletMultinomial
+      p_vector: "", // Multinomial
+      weights: "", // NormalMixture
+      means: "", // NormalMixture
+      sigmas: "", // NormalMixture
+
+      // AR models
+      k: "", // AR1
+      tau: "", // AR1
+      rho: "", // AR1
     },
   });
 
