@@ -53,12 +53,18 @@ function Training({
         ? Number(trainingValues.splitRatio)
         : Number(trainingValues.numFolds);
 
-    // Convert distribution parameter values to numbers
     const parsedDistributionParams = Object.fromEntries(
-      Object.entries(trainingValues.distributionParams).map(([key, value]) => [
-        key,
-        Number(value),
-      ])
+      Object.entries(trainingValues.distributionParams).map(([key, value]) => {
+        // Don't convert vector/string fields to Number
+        if (
+          ["alpha_vector", "p_vector", "weights", "means", "sigmas"].includes(
+            key
+          )
+        ) {
+          return [key, value];
+        }
+        return [key, value === "" ? undefined : Number(value)];
+      })
     );
 
     const requestData = {
@@ -703,7 +709,7 @@ function Training({
                   <td>Weights:</td>
                   <td>
                     <input
-                      type="number"
+                      type="string"
                       name="weights"
                       value={trainingValues.distributionParams.weights}
                       onChange={handleDistributionParamChange}
@@ -715,7 +721,7 @@ function Training({
                   <td>Means:</td>
                   <td>
                     <input
-                      type="number"
+                      type="string"
                       name="means"
                       value={trainingValues.distributionParams.means}
                       onChange={handleDistributionParamChange}
@@ -727,7 +733,7 @@ function Training({
                   <td>Sigmas:</td>
                   <td>
                     <input
-                      type="number"
+                      type="string"
                       name="sigmas"
                       value={trainingValues.distributionParams.sigmas}
                       onChange={handleDistributionParamChange}
