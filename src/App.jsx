@@ -59,13 +59,33 @@ function App() {
     rounds: 30,
     distribution: "Normal",
     distributionParams: {
-      mean: "",
-      sigma: "",
-      alpha: "",
-      beta: "",
-      lambda: "",
+      // Continuous distributions
+      mu: "", // Normal, ExGaussian, Logistic, LogNormal, Poisson
+      sigma: "", // Normal, HalfNormal, ExGaussian, LogNormal, GaussianRandomWalk
+      alpha: "", // Cauchy, Beta, Gamma, Weibull, BetaBinomial
+      beta: "", // Cauchy, Gamma, Weibull, BetaBinomial
+      lambda: "", // Exponential
+      nu: "", // ChiSquared, ExGaussian
+      scale: "", // Logistic
+      lower: "", // Uniform
+      upper: "", // Uniform
+
+      // Discrete distributions
+      p: "", // Bernoulli, Binomial, Categorical
+      n: "", // Binomial, BetaBinomial, DirichletMultinomial, Multinomial
+      alpha_vector: "", // Dirichlet, DirichletMultinomial
+      p_vector: "", // Multinomial
+      weights: "", // NormalMixture
+      means: "", // NormalMixture
+      sigmas: "", // NormalMixture
+
+      // AR models
+      k: "", // AR1
+      tau: "", // AR1
+      rho: "", // AR1
     },
   });
+
   const [nnTrainingValues, setNNTrainingValues] = useState({
     numFolds: 5,
     useCrossValidation: false,
