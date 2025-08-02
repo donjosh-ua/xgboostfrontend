@@ -59,6 +59,7 @@ function App() {
     rounds: 30,
     distribution: "Normal",
     distributionParams: {
+      markov: true,
       // Continuous distributions
       mu: "", // Normal, ExGaussian, Logistic, LogNormal, Poisson
       sigma: "", // Normal, HalfNormal, ExGaussian, LogNormal, GaussianRandomWalk
@@ -97,6 +98,7 @@ function App() {
     useBayesian: false,
     distribution: "normal",
     distributionParams: {
+      markov: true,
       // Continuous distributions
       mu: "0", // Normal, ExGaussian, Logistic, LogNormal, Poisson
       sigma: "1", // Normal, HalfNormal, ExGaussian, LogNormal, GaussianRandomWalk

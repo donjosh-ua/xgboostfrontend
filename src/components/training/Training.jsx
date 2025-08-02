@@ -183,6 +183,18 @@ function Training({
 
       <div className="distribution-config">
         <label>
+          Markov Chain:
+          <select
+            value={trainingValues.markov}
+            onChange={(e) => handleChange("markov", e.target.value)}
+            disabled={isLoading}
+          >
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </label>
+        <div></div>
+        <label>
           Distribution:
           <select
             value={trainingValues.distribution}
