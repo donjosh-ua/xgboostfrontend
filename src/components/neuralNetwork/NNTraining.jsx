@@ -123,6 +123,7 @@ function NNTraining({
 
           bnnParams.bayesian_config = {
             distribution_type: nnTrainingValues.distribution || "normal",
+            markov: Boolean(nnTrainingValues.markov),
             ...parsedParams,
           };
         }
@@ -320,6 +321,21 @@ function NNTraining({
                       value={nnTrainingValues.useBayesian ? "true" : "false"}
                       onChange={(e) =>
                         handleChange("useBayesian", e.target.value === "true")
+                      }
+                      disabled={isLoading}
+                    >
+                      <option value="false">No</option>
+                      <option value="true">Yes</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Markov:</td>
+                  <td>
+                    <select
+                      value={nnTrainingValues.markov ? "true" : "false"}
+                      onChange={(e) =>
+                        handleChange("markov", e.target.value === "true")
                       }
                       disabled={isLoading}
                     >

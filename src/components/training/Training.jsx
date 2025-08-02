@@ -70,6 +70,7 @@ function Training({
     const requestData = {
       method: trainingValues.trainingMethod,
       value: value,
+      markov: trainingValues.markov === "true",
       rounds: Number(trainingValues.rounds),
       distribution: trainingValues.distribution,
       params: parsedDistributionParams,
