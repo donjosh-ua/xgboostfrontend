@@ -259,6 +259,8 @@ function App() {
                   selectedFile={selectedFile}
                   modelType="neuralnetwork"
                   wasTrainedWithCV={wasTrainedWithCV}
+                  nnParams={nnParams}
+                  nnTrainingValues={nnTrainingValues}
                 />
               )}
             </>

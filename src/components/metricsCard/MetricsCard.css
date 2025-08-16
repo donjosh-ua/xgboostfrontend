@@ -1,18 +1,48 @@
 .nn-metrics-results {
   text-align: center;
   margin: 20px auto;
+  width: 100%;
 }
 
 .metrics-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
   justify-content: center;
-  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
 }
 
 .metric-card {
-  background-color: #f7f7f7;
+  background-color: var(--card-bg-color);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 10px;
-  margin: 10px;
-  width: 150px;
+  padding: 15px;
+  text-align: center;
+  transition: box-shadow 0.2s ease;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.metric-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.9em;
+  color: var(--text-secondary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.metric-card p {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--text-color);
+  word-break: break-all;
+  overflow-wrap: break-word;
 }

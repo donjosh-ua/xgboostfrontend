@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import {
   FaSpinner,
   FaChevronDown,
@@ -7,14 +8,14 @@ import {
 } from "react-icons/fa";
 import Toast from "../toast/Toast";
 import MetricsCard from "../metricsCard/MetricsCard";
-import ResultsImagesGrid from "./ResultsImagesGrid";
 import "./NNStyles.css";
 
-function NNResults({ wasTrainedWithCV }) {
+function NNResults({ wasTrainedWithCV, nnParams, nnTrainingValues }) {
   const [toastMessage, setToastMessage] = useState("");
   const [isTesting, setIsTesting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [resultsImages, setResultsImages] = useState({});
+  const [testResults, setTestResults] = useState({});
+  const [trainResults, setTrainResults] = useState({});
   const [metrics, setMetrics] = useState({});
   const [modalImage, setModalImage] = useState(null);
   const [localWasTrainedWithCV, setLocalWasTrainedWithCV] = useState(
@@ -35,22 +36,23 @@ function NNResults({ wasTrainedWithCV }) {
   }, [localWasTrainedWithCV]);
 
   useEffect(() => {
-    const cachedImages = localStorage.getItem("nnResultsImages");
     const cachedMetrics = localStorage.getItem("nnResultsMetrics");
+    const cachedTestResults = localStorage.getItem("nnTestResults");
+    const cachedTrainResults = localStorage.getItem("nnTrainResults");
     const storedWasTrainedWithCV = localStorage.getItem("wasTrainedWithCV");
 
     if (storedWasTrainedWithCV !== null) {
       setLocalWasTrainedWithCV(storedWasTrainedWithCV === "true");
     }
 
-    if (cachedImages) {
-      setResultsImages(JSON.parse(cachedImages));
-    }
     if (cachedMetrics) {
       setMetrics(JSON.parse(cachedMetrics));
     }
-    if (sessionStorage.getItem("nnResultsTesting") === "true") {
-      setIsTesting(true);
+    if (cachedTestResults) {
+      setTestResults(JSON.parse(cachedTestResults));
+    }
+    if (cachedTrainResults) {
+      setTrainResults(JSON.parse(cachedTrainResults));
     }
   }, []);
 
@@ -66,15 +68,15 @@ function NNResults({ wasTrainedWithCV }) {
     }
   }, [wasTrainedWithCV]);
 
-  // Persist metrics to localStorage whenever they change
+  // Persist testResults to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("nnResultsMetrics", JSON.stringify(metrics));
-  }, [metrics]);
+    localStorage.setItem("nnTestResults", JSON.stringify(testResults));
+  }, [testResults]);
 
-  // Persist resultsImages to localStorage whenever they change
+  // Persist trainResults to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("nnResultsImages", JSON.stringify(resultsImages));
-  }, [resultsImages]);
+    localStorage.setItem("nnTrainResults", JSON.stringify(trainResults));
+  }, [trainResults]);
 
   const handleDownload = () => {
     setIsDownloading(true);
@@ -114,86 +116,156 @@ function NNResults({ wasTrainedWithCV }) {
       });
   };
 
-  const handleTestRun = () => {
-    // Update localStorage with current training mode
-    localStorage.setItem("wasTrainedWithCV", wasTrainedWithCV.toString());
-    // Update local state
-    setLocalWasTrainedWithCV(wasTrainedWithCV);
-
-    // Clear previous results before testing
-    setMetrics({});
-    setResultsImages({});
-    localStorage.removeItem("nnResultsImages");
-    localStorage.removeItem("nnResultsMetrics");
-
+  const handleUnifiedTest = async () => {
     setIsTesting(true);
-    sessionStorage.setItem("nnResultsTesting", "true");
     setToastMessage("");
 
-    fetch(`${url}/train/results`, {
-      method: "GET",
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Test run failed with status " + res.status);
+    try {
+      // First, get training results
+      const trainResponse = await fetch(`${url}/train/results`, {
+        method: "GET",
+      });
+
+      if (!trainResponse.ok) {
+        throw new Error("Failed to get training results");
+      }
+
+      const trainData = await trainResponse.json();
+      console.log("Train results response:", trainData);
+
+      // Process training metrics
+      const basicMetrics = {};
+      const fullMetrics = trainData.raw_results || trainData;
+
+      Object.entries(fullMetrics).forEach(([key, value]) => {
+        if (typeof value !== "object" || value === null) {
+          basicMetrics[key] = value;
         }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Train results response:", data);
+      });
 
-        // Create a sanitized version of the metrics without nested objects
-        const basicMetrics = {};
-        const fullMetrics = data.raw_results || data;
+      setMetrics({
+        ...basicMetrics,
+        overall_class_frequency: fullMetrics.overall_class_frequency || {},
+        image_class_frequency: fullMetrics.image_class_frequency || {},
+        class_frequency: fullMetrics.class_frequency || {},
+        fold_accuracies: fullMetrics.fold_accuracies || {},
+      });
 
-        // Extract only the primitive values (numbers, strings) for MetricsCard
-        Object.entries(fullMetrics).forEach(([key, value]) => {
-          if (typeof value !== "object" || value === null) {
-            basicMetrics[key] = value;
+      // Store training results
+      setTrainResults({
+        metrics: fullMetrics,
+        images: trainData.images || {},
+      });
+
+      // Determine the best model name based on CV training and fold accuracies
+      let bestModelName;
+      if (
+        localWasTrainedWithCV &&
+        fullMetrics.fold_accuracies &&
+        Object.keys(fullMetrics.fold_accuracies).length > 0
+      ) {
+        // Find the fold with highest accuracy
+        let bestFold = null;
+        let highestAccuracy = -1;
+
+        Object.entries(fullMetrics.fold_accuracies).forEach(
+          ([foldName, accuracy]) => {
+            if (accuracy > highestAccuracy) {
+              highestAccuracy = accuracy;
+              bestFold = foldName;
+            }
           }
-        });
+        );
 
-        // Set the full metrics object for our component
-        setMetrics({
+        if (bestFold) {
+          // Extract fold number from fold name (e.g., "fold_1" -> "1")
+          const foldNumber = bestFold.replace(/fold[_-]?/i, "");
+          bestModelName = `best_${
+            nnTrainingValues?.modelName || "ModiR"
+          }_K${foldNumber}`;
+        } else {
+          bestModelName = `best_${nnTrainingValues?.modelName || "ModiR"}`;
+        }
+      } else {
+        bestModelName = `best_${nnTrainingValues?.modelName || "ModiR"}`;
+      }
+
+      console.log(
+        "Selected best model:",
+        bestModelName,
+        localWasTrainedWithCV ? "with CV" : "without CV"
+      );
+
+      // Second, run the test endpoint
+      const testRequestData = {
+        model_name: bestModelName,
+        test_size: Number(nnParams?.test_size || 0.2),
+        generate_plots: true,
+      };
+
+      console.log("Sending test request:", testRequestData);
+
+      const testResponse = await fetch(`${url}/train/test`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(testRequestData),
+      });
+
+      if (!testResponse.ok) {
+        const errorData = await testResponse.json().catch(() => ({}));
+        throw new Error(
+          errorData.error_message || `Test failed: ${testResponse.statusText}`
+        );
+      }
+
+      const testData = await testResponse.json();
+      console.log("Test results:", testData);
+
+      if (testData.success === false) {
+        throw new Error(testData.error_message || "Test failed");
+      }
+
+      setTestResults(testData);
+      localStorage.setItem("nnTestResults", JSON.stringify(testData));
+      localStorage.setItem(
+        "nnTrainResults",
+        JSON.stringify({
+          metrics: fullMetrics,
+          images: trainData.images || {},
+        })
+      );
+      localStorage.setItem(
+        "nnResultsMetrics",
+        JSON.stringify({
           ...basicMetrics,
           overall_class_frequency: fullMetrics.overall_class_frequency || {},
           image_class_frequency: fullMetrics.image_class_frequency || {},
           class_frequency: fullMetrics.class_frequency || {},
           fold_accuracies: fullMetrics.fold_accuracies || {},
-        });
+        })
+      );
 
-        localStorage.setItem(
-          "nnResultsMetrics",
-          JSON.stringify({
-            ...basicMetrics,
-            overall_class_frequency: fullMetrics.overall_class_frequency || {},
-            image_class_frequency: fullMetrics.image_class_frequency || {},
-            class_frequency: fullMetrics.class_frequency || {},
-            fold_accuracies: fullMetrics.fold_accuracies || {},
-          })
+      setToastMessage(
+        `Test completed successfully! Training and test results updated.`
+      );
+    } catch (error) {
+      console.error("Test error:", error);
+      const errorMsg = error.message;
+      if (
+        errorMsg.includes("Model validation failed") ||
+        errorMsg.includes("Error reading configuration")
+      ) {
+        setToastMessage(
+          "No trained model found. Please train a model first before testing."
         );
-
-        localStorage.setItem("wasTrainedWithCV", wasTrainedWithCV.toString());
-
-        if (data.images && typeof data.images === "object") {
-          setResultsImages(data.images);
-          localStorage.setItem("nnResultsImages", JSON.stringify(data.images));
-        } else {
-          setResultsImages({});
-          localStorage.removeItem("nnResultsImages");
-        }
-
-        setToastMessage(data.message || "Test run completed successfully!");
-      })
-      .catch((err) => {
-        console.error(err);
-        console.error("Data that caused error:", metrics);
-        setToastMessage("Error during test run. Please try again.");
-      })
-      .finally(() => {
-        setIsTesting(false);
-        sessionStorage.removeItem("nnResultsTesting");
-      });
+      } else {
+        setToastMessage(`Error: ${errorMsg}`);
+      }
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   // Safely check if an object exists and has keys
@@ -209,52 +281,22 @@ function NNResults({ wasTrainedWithCV }) {
     }));
   };
 
-  const filterCurrentFoldImages = (images, metrics) => {
-    // Always use wasTrainedWithCV from props for consistency with current training mode
-    // This ensures when you train with a new mode, we respect that mode
-    if (!wasTrainedWithCV) {
-      // When NOT trained with CV, filter out all CV-related images
-      const filteredImages = {};
-      Object.entries(images).forEach(([key, value]) => {
-        // Only include images that don't have fold-related names
-        if (!key.match(/fold[_-]?(\d+)/i) && !key.includes("cv_")) {
-          filteredImages[key] = value;
-        }
-      });
-      return filteredImages;
-    } else {
-      // When trained with CV, we want to show all CV-related images
-      // but we should still filter in case there are old non-CV images
-      const filteredImages = {};
-      Object.entries(images).forEach(([key, value]) => {
-        if (
-          key.match(/fold[_-]?(\d+)/i) ||
-          key.includes("cv_") ||
-          !key.match(/(split|test)[_-]?/i)
-        ) {
-          filteredImages[key] = value;
-        }
-      });
-      return filteredImages;
-    }
-  };
-
   return (
     <div className="nn-results-container">
-      <h2>Testing</h2>
-      <p>Test your neural network model against the dataset</p>
+      <h2>Model Testing & Results</h2>
+      <p>Test your neural network model and view training results</p>
 
       <button
-        onClick={handleTestRun}
+        onClick={handleUnifiedTest}
         disabled={isTesting}
         className="test-button"
       >
         {isTesting ? (
           <>
-            <FaSpinner className="loadingIcon" /> Testing...
+            <FaSpinner className="loadingIcon" /> Running Tests...
           </>
         ) : (
-          "Test Model"
+          "Run Complete Test"
         )}
       </button>
 
@@ -281,9 +323,86 @@ function NNResults({ wasTrainedWithCV }) {
         <Toast message={toastMessage} onClose={() => setToastMessage("")} />
       )}
 
+      {/* Display Test Results */}
+      {Object.keys(testResults).length > 0 && (
+        <div className="test-results-section">
+          <h3>Test Results</h3>
+          <p>
+            Model validation results from testing on unseen data (
+            {nnParams?.test_size || 0.2} split ratio)
+          </p>
+          <div className="test-metrics">
+            <div className="test-metric-item">
+              <span className="metric-label">Test Accuracy:</span>
+              <span className="test-metric-value">{testResults.accuracy}%</span>
+            </div>
+            <div className="test-metric-item">
+              <span className="metric-label">Test Samples:</span>
+              <span className="test-metric-value">
+                {testResults.test_samples}
+              </span>
+            </div>
+            <div className="test-metric-item">
+              <span className="metric-label">Model Used:</span>
+              <span className="test-metric-value">
+                {testResults.model_name}
+              </span>
+            </div>
+          </div>
+
+          {/* Display confusion matrices from training results */}
+          {trainResults.images &&
+            Object.keys(trainResults.images).length > 0 && (
+              <div className="test-plots">
+                <h4>Confusion Matrices</h4>
+                <div className="test-images-grid">
+                  {Object.entries(trainResults.images)
+                    .filter(([imageName]) => {
+                      const name = imageName.toLowerCase();
+
+                      // First, must be a confusion matrix
+                      if (
+                        !(name.includes("confusion") || name.includes("matrix"))
+                      ) {
+                        return false;
+                      }
+
+                      // If model was NOT trained with CV, exclude CV-related confusion matrices
+                      if (!localWasTrainedWithCV) {
+                        return !name.includes("fold") && !name.includes("cv_");
+                      }
+
+                      // If trained with CV, show all confusion matrices
+                      return true;
+                    })
+                    .map(([imageName, imageData]) => (
+                      <div key={imageName} className="test-image-container">
+                        <h5>{imageName.replace(/\.(png|jpg|jpeg)$/i, "")}</h5>
+                        <img
+                          src={`data:image/png;base64,${imageData}`}
+                          alt={imageName}
+                          className="test-image"
+                          onClick={() =>
+                            setModalImage(`data:image/png;base64,${imageData}`)
+                          }
+                        />
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+        </div>
+      )}
+
+      {/* Display Training Results */}
       {Object.keys(metrics).length > 0 && (
-        <>
-          {/* Pass only primitive values to MetricsCard, not nested objects */}
+        <div className="training-results-section">
+          <h3>Training Results</h3>
+          <p>
+            Performance metrics and visualizations from the training process
+          </p>
+
+          {/* Display training metrics */}
           <MetricsCard
             metrics={Object.fromEntries(
               Object.entries(metrics).filter(
@@ -291,6 +410,48 @@ function NNResults({ wasTrainedWithCV }) {
               )
             )}
           />
+
+          {/* Display training images from train/results endpoint */}
+          {trainResults.images &&
+            Object.keys(trainResults.images).length > 0 && (
+              <div className="training-plots">
+                <h4>Training Visualizations</h4>
+                <div className="training-images-grid">
+                  {Object.entries(trainResults.images)
+                    .filter(([imageName]) => {
+                      const name = imageName.toLowerCase();
+
+                      // Exclude confusion matrices (they go to test section)
+                      if (
+                        name.includes("confusion") ||
+                        name.includes("matrix")
+                      ) {
+                        return false;
+                      }
+
+                      // If model was NOT trained with CV, exclude CV-related images
+                      if (!localWasTrainedWithCV) {
+                        return !name.includes("fold") && !name.includes("cv_");
+                      }
+                      // If trained with CV, show all non-confusion images
+                      return true;
+                    })
+                    .map(([imageName, imageData]) => (
+                      <div key={imageName} className="training-image-container">
+                        <h5>{imageName.replace(/\.(png|jpg|jpeg)$/i, "")}</h5>
+                        <img
+                          src={`data:image/png;base64,${imageData}`}
+                          alt={imageName}
+                          className="training-image"
+                          onClick={() =>
+                            setModalImage(`data:image/png;base64,${imageData}`)
+                          }
+                        />
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
 
           {/* Display frequency data separately */}
           <div className="frequency-section">
@@ -437,7 +598,7 @@ function NNResults({ wasTrainedWithCV }) {
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
 
       {metrics && Object.keys(metrics).length > 0 && (
@@ -448,13 +609,6 @@ function NNResults({ wasTrainedWithCV }) {
         </div>
       )}
 
-      {Object.keys(resultsImages).length > 0 && (
-        <ResultsImagesGrid
-          resultsImages={filterCurrentFoldImages(resultsImages, metrics)}
-          setModalImage={setModalImage}
-        />
-      )}
-
       {modalImage && (
         <div className="modal" onClick={() => setModalImage(null)}>
           <img src={modalImage} alt="Maximized view" className="modal-image" />
@@ -463,5 +617,15 @@ function NNResults({ wasTrainedWithCV }) {
     </div>
   );
 }
+
+NNResults.propTypes = {
+  wasTrainedWithCV: PropTypes.bool.isRequired,
+  nnParams: PropTypes.shape({
+    test_size: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }),
+  nnTrainingValues: PropTypes.shape({
+    modelName: PropTypes.string,
+  }),
+};
 
 export default NNResults;

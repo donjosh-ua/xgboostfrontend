@@ -1204,4 +1204,169 @@ input:checked + .slider:before {
   cursor: not-allowed;
 }
 
+/* Model Test Section */
+.model-test-section {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--card-bg-color);
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.model-test-section h3 {
+  color: var(--text-color);
+  margin-bottom: 10px;
+}
+
+.model-test-section p {
+  color: var(--text-secondary-color);
+  margin-bottom: 15px;
+}
+
+/* Test Results Section */
+/* Unified Results Section Styles */
+.test-results-section,
+.training-results-section {
+  margin: 30px 0;
+  padding: 25px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--card-bg-color);
+  width: 100%;
+  max-width: 900px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.test-results-section h3,
+.training-results-section h3 {
+  color: var(--text-color);
+  margin-bottom: 8px;
+  text-align: left;
+  font-size: 1.4em;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.test-results-section p,
+.training-results-section p {
+  color: var(--text-secondary-color);
+  margin-bottom: 20px;
+  text-align: left;
+  font-size: 0.95em;
+  line-height: 1.4;
+}
+
+.test-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+  padding: 0;
+}
+
+.test-metric-item {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 15px;
+  text-align: center;
+  transition: box-shadow 0.2s ease;
+}
+
+.test-metric-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.metric-label {
+  font-size: 0.9em;
+  color: var(--text-secondary-color);
+  margin-bottom: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.test-metric-value {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--text-color);
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+/* Unified Visualization Sections */
+.test-plots,
+.training-plots {
+  margin-top: 25px;
+}
+
+.test-plots h4,
+.training-plots h4 {
+  color: var(--text-color);
+  text-align: left;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Unified Image Grids */
+.test-images-grid,
+.training-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  justify-items: center;
+  margin-top: 15px;
+}
+
+/* Unified Image Containers */
+.test-image-container,
+.training-image-container {
+  text-align: center;
+  background-color: var(--card-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  transition: box-shadow 0.2s ease;
+}
+
+.test-image-container:hover,
+.training-image-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.test-image-container h5,
+.training-image-container h5 {
+  color: var(--text-color);
+  margin-bottom: 10px;
+  font-size: 0.9em;
+  font-weight: 500;
+  text-transform: none;
+  word-break: break-word;
+}
+
+/* Unified Images */
+.test-image,
+.training-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.test-image:hover,
+.training-image:hover {
+  transform: scale(1.02);
+}
+
 /* ...existing code... */
